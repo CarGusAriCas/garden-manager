@@ -8,7 +8,8 @@ from app.core.database import Base, engine
 from app.routers import clients
 from app.routers import employees
 from app.routers import tasks
-from app.routers import jobs  
+from app.routers import jobs
+from app.routers import absences
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,9 +20,10 @@ app = FastAPI(
 )
 
 app.include_router(clients.router)
-app.include_router(employees.router) 
-app.include_router(tasks.router) 
+app.include_router(employees.router)
+app.include_router(tasks.router)
 app.include_router(jobs.router)
+app.include_router(absences.router)
 
 @app.get("/")
 def root():

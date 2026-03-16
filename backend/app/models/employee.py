@@ -40,3 +40,5 @@ class Employee(Base):
 
     # Relación: un empleado puede tener muchas tareas
     tasks = relationship("Task", secondary="task_employees", back_populates="employees")
+    # Relación: un empleado puede tener muchas ausencias
+    absences = relationship("Absence", back_populates="employee")
