@@ -4,6 +4,7 @@ Define la tabla 'employees' y sus columnas.
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -16,12 +17,13 @@ class Employee(Base):
         name: Nombre completo del empleado
         phone: Teléfono de contacto
         email: Correo electrónico (único)
-        role: Cargo o puesto (ej: jardinero, encargado)
-        speciality: Especialidad (ej: poda, riego, jardinería general)
-        hire_date: Fecha de incorporación a la empresa
+        role: Cargo o puesto
+        speciality: Especialidad
+        hire_date: Fecha de incorporación
         is_active: Si el empleado está activo o dado de baja
         created_at: Fecha de creación automática
         updated_at: Fecha de última modificación automática
+        tasks: Relación con las tareas asignadas a este empleado
     """
     __tablename__ = "employees"
 
@@ -35,3 +37,6 @@ class Employee(Base):
     is_active   = Column(Boolean,     default=True)
     created_at  = Column(DateTime,    server_default=func.now())
     updated_at  = Column(DateTime,    server_default=func.now(), onupdate=func.now())
+
+    # Relación: un empleado puede tener muchas tareas
+    tasks = relationship("Task", secondary="task_employees", back_populates="employees")

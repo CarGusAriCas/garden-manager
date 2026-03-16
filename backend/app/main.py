@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.core.database import Base, engine
 from app.routers import clients
 from app.routers import employees
+from app.routers import tasks 
 
 Base.metadata.create_all(bind=engine)
 
@@ -18,7 +19,7 @@ app = FastAPI(
 
 app.include_router(clients.router)
 app.include_router(employees.router) 
-
+app.include_router(tasks.router) 
 
 @app.get("/")
 def root():
