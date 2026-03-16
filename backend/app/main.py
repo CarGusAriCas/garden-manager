@@ -5,6 +5,7 @@ Aquí se inicializa FastAPI y se registran todos los routers.
 from fastapi import FastAPI
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.routers import clients 
 
 Base.metadata.create_all(bind=engine)
 
@@ -13,6 +14,9 @@ app = FastAPI(
     version=settings.app_version,
     description="API de gestión para empresa de jardinería",
 )
+
+app.include_router(clients.router)
+
 
 
 @app.get("/")
