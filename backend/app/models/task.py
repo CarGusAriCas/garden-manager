@@ -58,3 +58,5 @@ class Task(Base):
     # Relaciones
     client    = relationship("Client",   back_populates="tasks")
     employees = relationship("Employee", secondary=task_employees, back_populates="tasks")
+    # Relación: una tarea puede tener un trabajo asociado
+    jobs = relationship("Job", back_populates="task")
