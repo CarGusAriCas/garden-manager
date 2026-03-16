@@ -116,3 +116,23 @@ def delete_client(db: Session, client_id: int) -> dict:
     client.is_active = False
     db.commit()
     return {"message": f"Cliente {client.name} desactivado correctamente"}
+
+def update_client_coordinates(db: Session, client_id: int, lat: float, lon: float) -> Client:
+    """
+    Actualiza las coordenadas geográficas de un cliente.
+
+    Args:
+        db: Sesión de base de datos
+        client_id: ID del cliente
+        lat: Latitud
+        lon: Longitud
+
+    Returns:
+        Cliente actualizado
+    """
+    client           = get_client_by_id(db, client_id)
+    client.latitude  = lat
+    client.longitude = lon
+    db.commit()
+    db.refresh(client)
+    return client

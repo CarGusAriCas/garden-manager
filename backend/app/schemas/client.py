@@ -14,6 +14,8 @@ class ClientBase(BaseModel):
     email:   Optional[EmailStr] = Field(None, description="Correo electrónico")
     address: Optional[str] = Field(None, max_length=200, description="Dirección del inmueble")
     notes:   Optional[str] = Field(None, max_length=500, description="Observaciones")
+    latitude:  Optional[float] = Field(None, description="Latitud")
+    longitude: Optional[float] = Field(None, description="Longitud")
 
 
 class ClientCreate(ClientBase):

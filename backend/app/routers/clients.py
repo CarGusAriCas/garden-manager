@@ -47,3 +47,14 @@ def update_client(client_id: int, client_data: ClientUpdate, db: Session = Depen
 def delete_client(client_id: int, db: Session = Depends(get_db)):
     """Desactiva un cliente (borrado lógico)."""
     return client_service.delete_client(db, client_id)
+
+
+@router.patch("/{client_id}/coordinates")
+def set_client_coordinates(
+    client_id: int,
+    lat: float,
+    lon: float,
+    db: Session = Depends(get_db)
+):
+    """Actualiza las coordenadas geográficas de un cliente."""
+    return client_service.update_client_coordinates(db, client_id, lat, lon)

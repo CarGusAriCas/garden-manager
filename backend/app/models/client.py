@@ -2,7 +2,7 @@
 Modelo de base de datos para los clientes.
 Define la tabla 'clients' y sus columnas.
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -36,5 +36,8 @@ class Client(Base):
     created_at = Column(DateTime,    server_default=func.now())
     updated_at = Column(DateTime,    server_default=func.now(), onupdate=func.now())
 
+    # Coordenadas geográficas para el mapa
+    latitude  = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     # Relación: un cliente puede tener muchas tareas
     tasks = relationship("Task", back_populates="client")
