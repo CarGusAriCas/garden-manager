@@ -5,8 +5,11 @@ Todas las llamadas al backend pasan por aquí.
 import httpx
 import streamlit as st
 from datetime import date
+import os
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../backend/.env"))
 
-BASE_URL = "http://192.168.1.163:8000"
+BASE_URL = os.getenv("API_URL", "http://localhost:8000")
 
 
 def _get(endpoint: str) -> dict | list:
@@ -85,9 +88,8 @@ def geocode_address(address: str):
 
 # ── Clientes ───────────────────────────────────────────────────
 
-@st.cache_data(ttl=30)
+@st.cache_data(ttl=5)   # ← reduce a 5 segundos temporalmente
 def get_clients() -> list:
-    """Lista de clientes — cacheada 30 segundos."""
     return _get("/clients/")
 
 @st.cache_data(ttl=30)

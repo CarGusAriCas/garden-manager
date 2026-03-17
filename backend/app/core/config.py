@@ -10,14 +10,17 @@ class Settings(BaseSettings):
     Configuración de la aplicación.
     Los valores se cargan automáticamente desde el archivo .env
     """
-    app_name: str = "GardenManager"
-    app_version: str = "0.1.0"
-    debug: bool = True
+    app_name:     str = "GardenManager"
+    app_version:  str = "0.1.0"
+    debug:        bool = True
     database_url: str = "sqlite:///./database/garden_manager.db"
 
     # GitHub
     github_token: str = ""
     github_repo:  str = "CarGusAriCas/garden-manager"
+
+    # API
+    api_url: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"

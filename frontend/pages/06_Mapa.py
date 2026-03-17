@@ -41,20 +41,50 @@ try:
         # ── Geocodificar clientes sin coordenadas ──────────────
         sin_coords = [c for c in clientes if not c.get("latitude") and c.get("address")]
         if sin_coords:
-            progress = st.progress(0, text="Obteniendo ubicaciones...")
-            for i, c in enumerate(sin_coords):
-                lat, lon = geocode_address(c["address"])
-                if lat and lon:
-                    update_client_coordinates(c["id"], lat, lon)
-                    c["latitude"]  = lat
-                    c["longitude"] = lon
-                progress.progress(
-                    (i + 1) / len(sin_coords),
-                    text=f"Geocodificando {i+1}/{len(sin_coords)}: {c['name']}"
-                )
-            progress.empty()
-            st.cache_data.clear()   # ← fuerza recarga desde BD
-            st.rerun()
+            col_warn, col_refresh = st.columns([4, 1])
+            with col_warn:
+                st.warning(f"⚠️ {len(sin_coords)} cliente(s) sin ubicación en el mapa.")
+            with col_refresh:
+                if st.button("🔄 Refrescar", use_container_width=True):
+                    st.cache_data.clear()
+                    st.rerun()
+            if st.button("🌍 Obtener coordenadas automáticamente", use_container_width=True):
+                progress = st.progress(0, text="Iniciando geocodificación...")
+                from geopy.geocoders import Nominatim
+                from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+                import time
+
+                geolocator = Nominatim(user_agent="garden_manager_mlg_v2", timeout=10)
+                ok = 0
+                fallo = 0
+
+                for i, c in enumerate(sin_coords):
+                    try:
+                        location = geolocator.geocode(c["address"])
+                        if location:
+                            update_client_coordinates(c["id"], location.latitude, location.longitude)
+                            c["latitude"]  = location.latitude
+                            c["longitude"] = location.longitude
+                            ok += 1
+                        else:
+                            fallo += 1
+                    except (GeocoderTimedOut, GeocoderUnavailable):
+                        fallo += 1
+
+                    progress.progress(
+                        (i + 1) / len(sin_coords),
+                        text=f"Geocodificando {i+1}/{len(sin_coords)}: {c['name']}"
+                    )
+                    time.sleep(1.5)  # Respeta límite Nominatim
+
+                progress.empty()
+                st.cache_data.clear()
+
+                if ok > 0:
+                    st.success(f"✅ {ok} cliente(s) geocodificados correctamente.")
+                if fallo > 0:
+                    st.warning(f"⚠️ {fallo} cliente(s) no pudieron geocodificarse.")
+                st.rerun()
 
         # ── Clasificar ─────────────────────────────────────────
         con_coords  = [c for c in clientes if c.get("latitude") and c.get("longitude")]
