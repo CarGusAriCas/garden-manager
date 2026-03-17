@@ -4,6 +4,7 @@ Panel de notificaciones — WhatsApp y Telegram.
 import sys
 import os
 import streamlit as st
+import urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -65,7 +66,8 @@ with tab_test:
             else:
                 with st.spinner("Enviando..."):
                     try:
-                        r = _post(f"/notifications/test-whatsapp?numero={numero_test}", {})
+                        numero_encoded = urllib.parse.quote(numero_test)
+                        r = _post(f"/notifications/test-whatsapp?numero={numero_encoded}", {})
                         if r.get("ok"):
                             st.success("✅ WhatsApp funcionando. Revisa tu móvil.")
                         else:
