@@ -8,10 +8,9 @@ import sys
 import os
 from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from datetime import date, timedelta
-
 from utils.api_client import (
-    get_employees, get_tasks_by_day,
-    update_employee_coordinates, geocode_address,
+    get_employees, get_tasks_by_day, get_tasks_by_week,
+    update_employee_coordinates,
     format_date_es
 )
 import folium
@@ -72,14 +71,31 @@ try:
         st.info("No hay empleados registrados.")
         st.stop()
 
-    # ── Selector de fecha ──────────────────────────────────────
-    col_fecha, col_info = st.columns([2, 4])
+    # ── Selector de fecha y semana ─────────────────────────────────
+    col_fecha, col_semana, col_info = st.columns([2, 2, 2])
     with col_fecha:
         fecha_sel = st.date_input(
-            "📅 Fecha de trabajo",
+            "📅 Fecha concreta",
             value=date.today(),
-            help="Selecciona el día para ver las tareas asignadas"
+            help="Ver tareas de un día específico"
         )
+
+    with col_semana:
+        ver_semana = st.checkbox("📆 Ver semana completa", value=False)
+
+# Determina el rango de fechas a mostrar
+    if ver_semana:
+        inicio_sem = fecha_sel - timedelta(days=fecha_sel.weekday())
+        fin_sem    = inicio_sem + timedelta(days=6)
+        tareas_dia = get_tasks_by_week(inicio_sem, fin_sem)
+        rango_txt  = f"{format_date_es(str(inicio_sem))} → {format_date_es(str(fin_sem))}"
+    else:
+        tareas_dia = get_tasks_by_day(fecha_sel)
+        rango_txt  = format_date_es(str(fecha_sel))
+
+    with col_info:
+        st.markdown(f"**{rango_txt}**")
+        st.caption(f"{len(tareas_dia)} tarea(s) · {len(empleados)} empleados")
 
     # ── Cargar tareas del día ──────────────────────────────────
     tareas_dia = get_tasks_by_day(fecha_sel)
@@ -102,7 +118,7 @@ try:
         with st.spinner(f"Localizando {len(empleados_sin_coords)} empleado(s)..."):
             for e in empleados_sin_coords:
                 # Usamos Madrid centro como base para empleados sin dirección
-                lat, lon = 40.4168, -3.7038
+                lat, lon = 36.6937, -4.5246
                 update_employee_coordinates(e["id"], lat, lon)
                 e["latitude"]  = lat
                 e["longitude"] = lon
@@ -110,7 +126,7 @@ try:
     # ── Mapa base centrado en media de coordenadas ─────────────
     lats = [e["latitude"]  for e in empleados if e.get("latitude")]
     lons = [e["longitude"] for e in empleados if e.get("longitude")]
-    centro = [sum(lats)/len(lats), sum(lons)/len(lons)] if lats else [40.4168, -3.7038]
+    centro = [sum(lats)/len(lats), sum(lons)/len(lons)] if lats else [36.6937, -4.5246]
 
     mapa = folium.Map(location=centro, zoom_start=12, tiles="OpenStreetMap")
 

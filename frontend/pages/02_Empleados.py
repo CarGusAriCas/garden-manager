@@ -12,9 +12,7 @@ apply_responsive_css()
 mobile_topbar()
 back_button()
 
-
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 
 st.set_page_config(page_title="Empleados · GardenManager", page_icon="👷", layout="wide")
 st.title("👷 Gestión de Empleados")

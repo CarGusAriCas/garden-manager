@@ -5,20 +5,18 @@ Dashboard adaptativo según dispositivo (móvil/tablet/desktop).
 import streamlit as st
 import sys
 import os
-from datetime import date
-
-sys.path.append(os.path.dirname(__file__))
 from utils.api_client import get_clients, get_employees, get_tasks, get_jobs, get_absences, format_date_es
 from utils.responsive import apply_responsive_css, mobile_topbar
+
+sys.path.append(os.path.dirname(__file__))
+apply_responsive_css()
+mobile_topbar()
 
 st.set_page_config(
     page_title="Jardineando.es",
     page_icon="🌿",
     layout="wide"
 )
-
-apply_responsive_css()
-mobile_topbar()
 
 # ── Detecta dispositivo via JS ─────────────────────────────────
 st.components.v1.html("""
