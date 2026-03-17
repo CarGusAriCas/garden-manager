@@ -4,13 +4,17 @@ Página de mapa de clientes con buscador y filtros.
 import streamlit as st
 import sys
 import os
-from utils.responsive import apply_responsive_css
-apply_responsive_css()
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from utils.api_client import get_clients, update_client_coordinates, geocode_address
 import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
+
+apply_responsive_css()
+mobile_topbar()
+back_button()
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="Mapa · GardenManager", page_icon="🗺️", layout="wide")
 st.title("🗺️ Mapa de clientes")

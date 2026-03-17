@@ -4,14 +4,18 @@ Página de gestión de trabajos y checklists.
 import streamlit as st
 import sys
 import os
-from utils.responsive import apply_responsive_css
-apply_responsive_css()
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from datetime import datetime
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.api_client import (
     get_jobs, get_tasks, create_job,
     update_job, update_checklist_item, format_date_es
 )
+
+apply_responsive_css()
+mobile_topbar()
+back_button()
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="Trabajos · GardenManager", page_icon="📋", layout="wide")
 st.title("📋 Trabajos realizados")

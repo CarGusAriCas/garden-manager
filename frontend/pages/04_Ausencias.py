@@ -4,14 +4,18 @@ Página de gestión de ausencias de personal.
 import streamlit as st
 import sys
 import os
-from utils.responsive import apply_responsive_css
-apply_responsive_css()
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from datetime import date
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.api_client import (
     get_absences, get_employees, create_absence,
     update_absence, check_availability, format_date_es
 )
+
+apply_responsive_css()
+mobile_topbar()
+back_button()
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="Ausencias · GardenManager", page_icon="🏖️", layout="wide")
 st.title("🏖️ Control de Ausencias")

@@ -154,3 +154,78 @@ def device_selector():
             )
         )
         st.session_state["device"] = device
+
+
+def mobile_topbar():
+    """
+    Muestra una barra de navegación superior en móvil.
+    Solo visible cuando device == 'mobile'.
+    Oculta la sidebar completamente.
+    """
+    device = st.session_state.get("device", "desktop")
+    if device != "mobile":
+        return
+
+    # Oculta sidebar en móvil
+    st.markdown("""
+        <style>
+        [data-testid="stSidebar"] { display: none !important; }
+        [data-testid="collapsedControl"] { display: none !important; }
+        .block-container { padding-top: 0.5rem !important; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # ── Fila 1 — Atrás + Logo + Sugerencias ───────────────────
+    col_back, col_title, col_suggest = st.columns([1, 5, 1])
+    with col_back:
+        if st.button("◀", key="topbar_back", use_container_width=True):
+            st.switch_page("Home.py")
+    with col_title:
+        st.markdown("**🌿 GardenManager**")
+    with col_suggest:
+        if st.button("💡", key="topbar_suggest", use_container_width=True):
+            st.switch_page("pages/08_Sugerencias.py")
+
+    # ── Fila 2 — Navegación principal ─────────────────────────
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        if st.button("👤\nClientes",  key="top_cli", use_container_width=True):
+            st.switch_page("pages/01_Clientes.py")
+    with c2:
+        if st.button("👷\nEmpleados", key="top_emp", use_container_width=True):
+            st.switch_page("pages/02_Empleados.py")
+    with c3:
+        if st.button("📅\nTareas",    key="top_tar", use_container_width=True):
+            st.switch_page("pages/03_Tareas.py")
+    with c4:
+        if st.button("🏖️\nAusencias", key="top_aus", use_container_width=True):
+            st.switch_page("pages/04_Ausencias.py")
+
+    # ── Fila 3 — Navegación secundaria ────────────────────────
+    c5, c6, c7, c8 = st.columns(4)
+    with c5:
+        if st.button("📋\nTrabajos",  key="top_job", use_container_width=True):
+            st.switch_page("pages/05_Trabajos.py")
+    with c6:
+        if st.button("🗺️\nMapa",      key="top_map", use_container_width=True):
+            st.switch_page("pages/06_Mapa.py")
+    with c7:
+        if st.button("🧭\nRutas",     key="top_rut", use_container_width=True):
+            st.switch_page("pages/07_Mapa_Empleados.py")
+    with c8:
+        if st.button("🏠\nInicio",    key="top_hom", use_container_width=True):
+            st.switch_page("Home.py")
+
+    st.divider()
+
+
+def back_button(label: str = "◀ Volver al inicio"):
+    """
+    Muestra un botón de volver en desktop y tablet.
+    En móvil no hace falta porque ya está en la topbar.
+    """
+    device = st.session_state.get("device", "desktop")
+    if device == "mobile":
+        return
+    if st.button(label, key="back_btn"):
+        st.switch_page("Home.py")

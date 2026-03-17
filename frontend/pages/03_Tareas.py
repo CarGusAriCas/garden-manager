@@ -4,15 +4,19 @@ Página de gestión de tareas y agenda semanal.
 import streamlit as st
 import sys
 import os
-from utils.responsive import apply_responsive_css
-apply_responsive_css()
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from datetime import date, timedelta
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.api_client import (
     get_tasks, get_clients, get_employees,
     create_task, update_task, delete_task,
     get_tasks_by_week, format_date_es
 )
+
+apply_responsive_css()
+mobile_topbar()
+back_button()
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="Tareas · GardenManager", page_icon="📅", layout="wide")
 st.title("📅 Tareas y Agenda")

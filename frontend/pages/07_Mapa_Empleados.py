@@ -6,10 +6,9 @@ Permite abrir Google Maps con la ruta propuesta al trabajo seleccionado.
 import streamlit as st
 import sys
 import os
-from utils.responsive import apply_responsive_css
-apply_responsive_css()
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from datetime import date, timedelta
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from utils.api_client import (
     get_employees, get_tasks_by_day,
     update_employee_coordinates, geocode_address,
@@ -17,6 +16,12 @@ from utils.api_client import (
 )
 import folium
 from streamlit_folium import st_folium
+
+apply_responsive_css()
+mobile_topbar()
+back_button()
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(
     page_title="Mapa Empleados · GardenManager",

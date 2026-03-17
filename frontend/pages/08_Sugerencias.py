@@ -5,24 +5,25 @@ Permite crear issues en GitHub directamente desde la app.
 import streamlit as st
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(__file__), "../../backend/.env"))
-
 from utils.github_client import (
     crear_issue, listar_issues,
     ETIQUETAS_DISPONIBLES, PRIORIDADES, MODULOS
 )
-from utils.responsive import apply_responsive_css
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../backend/.env"))
+apply_responsive_css()
+mobile_topbar()
+back_button()
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(
     page_title="Sugerencias · GardenManager",
     page_icon="💡",
     layout="wide"
 )
-
-apply_responsive_css()
 
 st.title("💡 Sugerencias y mejoras")
 st.caption("Envía tus ideas directamente al equipo de desarrollo")
