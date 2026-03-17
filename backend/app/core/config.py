@@ -28,8 +28,8 @@ class Settings(BaseSettings):
     twilio_whatsapp_from: str = "whatsapp:+14155238886"
 
     # Telegram
-    telegram_token:   str = ""
-    telegram_chat_id: str = ""
+    telegram_token:   str = "8776864106:AAFgSMf7OHuSJJh4WRog6pjH_uRXGm8_yx4"
+    telegram_chat_id: str = "2144076106"
     class Config:
         env_file = ".env"
 

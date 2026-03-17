@@ -10,6 +10,7 @@ from app.routers import employees
 from app.routers import tasks
 from app.routers import jobs
 from app.routers import absences
+from app.routers import notifications
 
 Base.metadata.create_all(bind=engine)
 
@@ -24,6 +25,7 @@ app.include_router(employees.router)
 app.include_router(tasks.router)
 app.include_router(jobs.router)
 app.include_router(absences.router)
+app.include_router(notifications.router)
 
 @app.get("/")
 def root():

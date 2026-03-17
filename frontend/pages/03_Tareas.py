@@ -72,7 +72,7 @@ with tab_agenda:
                     f"**{'🔵 ' if es_hoy else ''}{nombres_dias[i]}**"
                 )
                 st.caption(format_date_es(str(dia)))
-                tareas_dia = [t for t in tareas_semana if t["date"] == str(dia)]
+                tareas_dia = [t for t in tareas_semana if t["date"][:10] == str(dia)]
                 if tareas_dia:
                     for t in tareas_dia:
                         color = "🔴" if t["priority"] == "alta" else "🟡" if t["priority"] == "media" else "🟢"

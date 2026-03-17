@@ -8,7 +8,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Importa todos los modelos para que SQLAlchemy resuelva las relaciones
-from app.models import client, employee, task, job, absence
+from app.models import client, employee, task, job, absence # noqa
 from app.core.database import SessionLocal
 from app.models.client import Client
 from geopy.geocoders import Nominatim

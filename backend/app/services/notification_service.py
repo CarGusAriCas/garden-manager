@@ -3,7 +3,7 @@ Servicio unificado de notificaciones.
 Gestiona el envío por WhatsApp (Twilio) y Telegram.
 """
 from app.core.twilio_client import send_whatsapp
-from app.core.telegram_client import send_telegram, send_telegram_alert
+from app.core.telegram_client import send_telegram
 from app.core.config import settings
 
 
