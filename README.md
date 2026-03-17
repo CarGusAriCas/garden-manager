@@ -6,12 +6,13 @@ API de gestión para empresa de jardinería desarrollada como proyecto de portfo
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat&logo=fastapi&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.3+-FF4B4B?style=flat&logo=streamlit&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white)
+![Folium](https://img.shields.io/badge/Folium-Maps-77B829?style=flat&logo=leaflet&logoColor=white)
 
 ---
 
 ## 📋 Descripción
 
-GardenManager es una aplicación web full-stack para la gestión integral de una empresa de jardinería. Permite gestionar clientes, empleados, planificación de tareas, registro de trabajos realizados, checklists de verificación, incidencias y control de ausencias de personal.
+GardenManager es una aplicación web full-stack para la gestión integral de una empresa de jardinería. Permite gestionar clientes, empleados, planificación de tareas, registro de trabajos realizados, checklists de verificación, incidencias, control de ausencias de personal y visualización geográfica de clientes en mapa interactivo.
 
 Desarrollado con arquitectura modular y separación clara de responsabilidades, preparado para escalar de SQLite a PostgreSQL sin reescribir lógica de negocio.
 
@@ -38,6 +39,12 @@ garden_manager/
 │
 ├── frontend/                       # Interfaz con Streamlit
 │   ├── pages/                      # Páginas de cada módulo
+│   │   ├── 01_Clientes.py
+│   │   ├── 02_Empleados.py
+│   │   ├── 03_Tareas.py
+│   │   ├── 04_Ausencias.py
+│   │   ├── 05_Trabajos.py
+│   │   └── 06_Mapa.py              # Mapa interactivo con Folium
 │   ├── utils/
 │   │   └── api_client.py           # Cliente HTTP hacia la API
 │   └── Home.py                     # Dashboard principal
@@ -66,6 +73,7 @@ Streamlit → api_client.py → routers/ → services/ → models/ → BD
 | **Checklists** | Listas de verificación e incidencias por trabajo |
 | **Ausencias** | Vacaciones, bajas y control de disponibilidad |
 | **Dashboard** | Métricas y resumen del estado del negocio |
+| **Mapa de clientes** | Mapa interactivo con geocodificación automática, buscador y filtros por zona |
 
 ---
 
@@ -79,6 +87,8 @@ Streamlit → api_client.py → routers/ → services/ → models/ → BD
 | Base de datos | **SQLite** → **PostgreSQL** | Desarrollo local / producción |
 | Frontend | **Streamlit** | Interfaz de usuario rápida |
 | HTTP client | **httpx** | Comunicación frontend → backend |
+| Mapas | **Folium + streamlit-folium** | Mapas interactivos con Leaflet.js |
+| Geocodificación | **Geopy + Nominatim** | Conversión dirección → coordenadas (OpenStreetMap) |
 
 ---
 
@@ -163,6 +173,7 @@ La interfaz estará disponible en `http://localhost:8501`.
 | GET | `/clients/{id}` | Obtiene un cliente por ID |
 | POST | `/clients/` | Crea un nuevo cliente |
 | PUT | `/clients/{id}` | Actualiza un cliente |
+| PATCH | `/clients/{id}/coordinates` | Actualiza coordenadas geográficas |
 | DELETE | `/clients/{id}` | Desactiva un cliente |
 
 ### Empleados `/employees`
@@ -205,6 +216,18 @@ La interfaz estará disponible en `http://localhost:8501`.
 
 ---
 
+## 🗺️ Mapa de clientes
+
+El módulo de mapa incluye:
+
+- **Geocodificación automática** — convierte direcciones en coordenadas usando Nominatim (OpenStreetMap), sin coste ni API key
+- **Buscador** — filtra por nombre, email, teléfono o dirección
+- **Filtros por zona** — agrupa clientes por área geográfica con colores distintivos
+- **Marcadores interactivos** — haz clic para ver todos los datos del cliente
+- **Agrupación inteligente** — MarkerCluster agrupa marcadores cercanos al alejar el zoom
+
+---
+
 ## 🗄️ Escalabilidad — SQLite a PostgreSQL
 
 El proyecto está diseñado para migrar de SQLite a PostgreSQL modificando **una sola línea** en el archivo `.env`:
@@ -220,6 +243,22 @@ SQLAlchemy actúa como capa de abstracción — los modelos, servicios y routers
 
 ---
 
+## 🗺️ Roadmap
+
+| Fase | Módulo | Estado |
+|------|--------|--------|
+| 1 | Core + Setup | ✅ |
+| 2 | Clientes | ✅ |
+| 3 | Empleados | ✅ |
+| 4 | Tareas & Agenda | ✅ |
+| 5 | Trabajos & Checklists | ✅ |
+| 6 | Ausencias | ✅ |
+| 7 | Frontend Streamlit | ✅ |
+| 8 | README & Documentación | ✅ |
+| 9 | Mapa empleados + rutas Google Maps | 🔜 |
+
+---
+
 ## ✅ Buenas prácticas aplicadas
 
 - **Tipado estricto** con Pydantic v2 en todos los schemas
@@ -229,6 +268,7 @@ SQLAlchemy actúa como capa de abstracción — los modelos, servicios y routers
 - **Docstrings** en todas las funciones y clases
 - **Validaciones de negocio** — detección de solapamiento de ausencias, emails duplicados, IDs inexistentes
 - **Datos de prueba** con script `seed.py` reproducible
+- **Geocodificación automática** sin dependencias de pago
 
 ---
 
@@ -240,4 +280,3 @@ Desarrollado por **CarGusAriCas**
 ---
 
 *Proyecto de portfolio — Python + FastAPI + Streamlit*
-```

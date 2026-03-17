@@ -4,6 +4,8 @@ Página de gestión de ausencias de personal.
 import streamlit as st
 import sys
 import os
+from utils.responsive import apply_responsive_css
+apply_responsive_css()
 from datetime import date
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.api_client import (
