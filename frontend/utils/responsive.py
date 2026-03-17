@@ -108,7 +108,7 @@ def mobile_topbar():
         st.markdown("**🌿 GardenManager**")
     with c_sug:
         if st.button("💡\nSugerencias", key="tb_sug", use_container_width=True):
-            st.switch_page("pages/08_Sugerencias.py")
+            st.switch_page("pages/15_Sugerencias.py")
 
     # Fila 2 — navegación principal
     c1, c2, c3, c4 = st.columns(4)
@@ -137,7 +137,13 @@ def mobile_topbar():
         if st.button("🧭\nRutas",     key="tb_rut", use_container_width=True):
             st.switch_page("pages/07_Mapa_Empleados.py")
     with c8:
-        if st.button("🏠\nInicio",    key="tb_hom", use_container_width=True):
+        if st.button("📱\nAvisos",         key="tb_not", use_container_width=True):  # ← cambia 🏠 por 📱
+            st.switch_page("pages/10_Notificaciones.py")
+
+    # Fila 4 — inicio
+    _, col_home, _ = st.columns([3, 2, 3])
+    with col_home:
+        if st.button("🏠 Inicio", key="tb_hom", use_container_width=True):
             st.switch_page("Home.py")
 
     st.divider()
@@ -175,4 +181,4 @@ def device_selector():
 
     st.sidebar.divider()
     if st.sidebar.button("💡 Sugerencias", use_container_width=True):
-        st.switch_page("pages/08_Sugerencias.py")
+        st.switch_page("pages/15_Sugerencias.py")

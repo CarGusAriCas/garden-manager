@@ -47,8 +47,10 @@ if "device" not in st.session_state:
 with st.sidebar:
     st.markdown("### 🌿 GardenManager©")
     st.divider()
+    if st.button("📱 Notificaciones", use_container_width=True):
+        st.switch_page("pages/10_Notificaciones.py")
     if st.button("💡 Enviar sugerencia", use_container_width=True):
-        st.switch_page("pages/08_Sugerencias.py")
+        st.switch_page("pages/15_Sugerencias.py")
     st.caption("🔧 Simular dispositivo")
     device_override = st.selectbox(
         "Vista",
@@ -111,6 +113,7 @@ if device == "mobile":
         ("📋", "Trabajos",   f"{len(en_progreso)} en curso", "pages/05_Trabajos.py"),
         ("🗺️", "Mapa",      "Ver clientes",                 "pages/06_Mapa.py"),
         ("🧭", "Rutas",     "Ver empleados",                "pages/07_Mapa_Empleados.py"),
+        ("📱", "Notificaciones", "WhatsApp · Telegram",     "pages/10_Notificaciones.py"),  # ← AÑADE
     ]
 
     # Grid 2 columnas para móvil
@@ -196,6 +199,7 @@ elif device == "tablet":
         ("📋", "Trabajos",  "pages/05_Trabajos.py"),
         ("🗺️", "Mapa",     "pages/06_Mapa.py"),
         ("🧭", "Rutas",    "pages/07_Mapa_Empleados.py"),
+        ("📱", "Notificaciones", "pages/10_Notificaciones.py"),  # ← AÑADE
     ]
     for i, (icon, nombre, pagina) in enumerate(MODULOS_TAB):
         with cols[i % 4]:
@@ -264,7 +268,7 @@ else:
 
     # Botones de módulos
     st.divider()
-    bc1, bc2, bc3, bc4, bc5, bc6, bc7 = st.columns(7)
+    bc1, bc2, bc3, bc4, bc5, bc6, bc7, bc8 = st.columns(8)
     if bc1.button("👤 Clientes",  use_container_width=True): 
         st.switch_page("pages/01_Clientes.py")
     if bc2.button("👷 Empleados", use_container_width=True): 
@@ -279,6 +283,8 @@ else:
         st.switch_page("pages/06_Mapa.py")
     if bc7.button("🧭 Rutas",     use_container_width=True): 
         st.switch_page("pages/07_Mapa_Empleados.py")
+    if bc8.button("📱 Notificaciones", use_container_width=True): 
+        st.switch_page("pages/10_Notificaciones.py")
 
     st.divider()
 
