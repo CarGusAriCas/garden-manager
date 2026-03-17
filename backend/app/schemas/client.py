@@ -16,6 +16,7 @@ class ClientBase(BaseModel):
     notes:   Optional[str] = Field(None, max_length=500, description="Observaciones")
     latitude:  Optional[float] = Field(None, description="Latitud")
     longitude: Optional[float] = Field(None, description="Longitud")
+    whatsapp_number: Optional[str] = Field(None, description="Número WhatsApp +34...")
 
 
 class ClientCreate(ClientBase):

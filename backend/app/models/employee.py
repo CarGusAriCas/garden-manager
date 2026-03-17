@@ -37,6 +37,8 @@ class Employee(Base):
     is_active   = Column(Boolean,     default=True, index=True)
     created_at  = Column(DateTime,    server_default=func.now())
     updated_at  = Column(DateTime,    server_default=func.now(), onupdate=func.now())
+    whatsapp_number  = Column(String(20),  nullable=True)
+    telegram_chat_id = Column(String(50),  nullable=True)
 
     # Coordenadas geográficas
     latitude  = Column(Float, nullable=True)

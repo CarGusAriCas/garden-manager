@@ -17,6 +17,8 @@ class EmployeeBase(BaseModel):
     hire_date:  Optional[date] = Field(None,                 description="Fecha de incorporación")
     latitude:  Optional[float] = Field(None, description="Latitud")
     longitude: Optional[float] = Field(None, description="Longitud")
+    whatsapp_number:  Optional[str] = Field(None, description="Número WhatsApp +34...")
+    telegram_chat_id: Optional[str] = Field(None, description="Chat ID de Telegram")
 
 
 class EmployeeCreate(EmployeeBase):

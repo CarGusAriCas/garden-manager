@@ -22,6 +22,14 @@ class Settings(BaseSettings):
     # API
     api_url: str = "http://localhost:8000"
 
+    # Twilio WhatsApp
+    twilio_account_sid:   str = "ACdbc0c7d072a76df4c0d91748bd0e38a0"
+    twilio_auth_token:    str = "be042c45da594ac22cb67e92da26e397"
+    twilio_whatsapp_from: str = "whatsapp:+14155238886"
+
+    # Telegram
+    telegram_token:   str = ""
+    telegram_chat_id: str = ""
     class Config:
         env_file = ".env"
 

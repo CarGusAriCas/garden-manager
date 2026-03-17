@@ -35,6 +35,7 @@ class Client(Base):
     is_active  = Column(Boolean,     default=True, index=True)
     created_at = Column(DateTime,    server_default=func.now())
     updated_at = Column(DateTime,    server_default=func.now(), onupdate=func.now())
+    whatsapp_number  = Column(String(20),  nullable=True)
 
     # Coordenadas geográficas para el mapa
     latitude  = Column(Float, nullable=True)
