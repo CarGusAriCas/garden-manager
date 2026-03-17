@@ -5,14 +5,15 @@ import streamlit as st
 import sys
 import os
 from datetime import date
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from utils.api_client import get_employees, create_employee, update_employee, delete_employee, format_date_es
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
-
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="Empleados · GardenManager", page_icon="👷", layout="wide")
 st.title("👷 Gestión de Empleados")

@@ -4,22 +4,22 @@ Página de mapa de clientes con buscador y filtros.
 import streamlit as st
 import sys
 import os
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import get_clients, update_client_coordinates, geocode_address
 import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button
+from utils.api_client import get_clients, update_client_coordinates, geocode_address
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 st.set_page_config(page_title="Mapa · GardenManager", page_icon="🗺️", layout="wide")
 st.title("🗺️ Mapa de clientes")
 st.divider()
-
 
 def extraer_zona(address: str) -> str:
     """
@@ -41,13 +41,19 @@ try:
         # ── Geocodificar clientes sin coordenadas ──────────────
         sin_coords = [c for c in clientes if not c.get("latitude") and c.get("address")]
         if sin_coords:
-            with st.spinner(f"Obteniendo ubicación de {len(sin_coords)} cliente(s)..."):
-                for c in sin_coords:
-                    lat, lon = geocode_address(c["address"])
-                    if lat and lon:
-                        update_client_coordinates(c["id"], lat, lon)
-                        c["latitude"]  = lat
-                        c["longitude"] = lon
+            progress = st.progress(0, text="Obteniendo ubicaciones...")
+            for i, c in enumerate(sin_coords):
+                lat, lon = geocode_address(c["address"])
+                if lat and lon:
+                    update_client_coordinates(c["id"], lat, lon)
+                    c["latitude"]  = lat
+                    c["longitude"] = lon
+                progress.progress(
+                    (i + 1) / len(sin_coords),
+                    text=f"Geocodificando {i+1}/{len(sin_coords)}: {c['name']}"
+                )
+            progress.empty()
+            st.cache_data.clear()   # ← fuerza recarga desde BD
             st.rerun()
 
         # ── Clasificar ─────────────────────────────────────────

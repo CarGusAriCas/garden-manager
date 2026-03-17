@@ -4,14 +4,15 @@ Página de gestión de clientes.
 import streamlit as st
 import sys
 import os
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from utils.api_client import get_clients, create_client, update_client, delete_client, format_date_es
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
-
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="Clientes · GardenManager", page_icon="👤", layout="wide")
 st.title("👤 Gestión de Clientes")

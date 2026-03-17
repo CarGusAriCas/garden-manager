@@ -1,22 +1,23 @@
 """
 Página de gestión de tareas y agenda semanal.
 """
-import streamlit as st
 import sys
 import os
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
+import streamlit as st
 from datetime import date, timedelta
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button
 from utils.api_client import (
     get_tasks, get_clients, get_employees,
-    create_task, update_task, delete_task,
+    create_task, update_task,
     get_tasks_by_week, format_date_es
 )
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
-
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="Tareas · GardenManager", page_icon="📅", layout="wide")
 st.title("📅 Tareas y Agenda")
@@ -33,40 +34,43 @@ tab_agenda, tab_lista, tab_nueva = st.tabs([
 with tab_agenda:
     st.subheader("Agenda semanal")
 
-    # Selector de semana
-    hoy        = date.today()
-    inicio_sem = hoy - timedelta(days=hoy.weekday())
-    col_nav1, col_nav2, col_nav3 = st.columns([1, 3, 1])
-
-    with col_nav1:
-        if st.button("◀ Semana anterior"):
-            inicio_sem = inicio_sem - timedelta(weeks=1)
-    with col_nav3:
-        if st.button("Semana siguiente ▶"):
-            inicio_sem = inicio_sem + timedelta(weeks=1)
-
+    # Inicializa semana en session_state
     if "semana_inicio" not in st.session_state:
-        st.session_state.semana_inicio = inicio_sem
+        hoy = date.today()
+        st.session_state.semana_inicio = hoy - timedelta(days=hoy.weekday())
 
-    if st.button("◀ Semana anterior", key="prev"):
-        st.session_state.semana_inicio -= timedelta(weeks=1)
-    if st.button("Semana siguiente ▶", key="next"):
-        st.session_state.semana_inicio += timedelta(weeks=1)
-
-    inicio = st.session_state.semana_inicio
-    fin    = inicio + timedelta(days=6)
-
-    st.caption(f"Semana del {format_date_es(str(inicio))} al {format_date_es(str(fin))}")
+    # Navegación
+    col_nav1, col_nav2, col_nav3 = st.columns([1, 3, 1])
+    with col_nav1:
+        if st.button("◀ Anterior", key="prev", use_container_width=True):
+            st.session_state.semana_inicio -= timedelta(weeks=1)
+            st.rerun()
+    with col_nav3:
+        if st.button("Siguiente ▶", key="next", use_container_width=True):
+            st.session_state.semana_inicio += timedelta(weeks=1)
+            st.rerun()
+    with col_nav2:
+        inicio = st.session_state.semana_inicio
+        fin    = inicio + timedelta(days=6)
+        st.markdown(
+            f"<div style='text-align:center; padding-top:8px;'>"
+            f"📅 <b>{format_date_es(str(inicio))}</b> → "
+            f"<b>{format_date_es(str(fin))}</b></div>",
+            unsafe_allow_html=True
+        )
 
     try:
         tareas_semana = get_tasks_by_week(inicio, fin)
-        dias = [inicio + timedelta(days=i) for i in range(7)]
-        nombres_dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+        dias          = [inicio + timedelta(days=i) for i in range(7)]
+        nombres_dias  = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
         cols = st.columns(7)
         for i, (col, dia) in enumerate(zip(cols, dias)):
             with col:
-                st.markdown(f"**{nombres_dias[i]}**")
+                es_hoy = dia == date.today()
+                st.markdown(
+                    f"**{'🔵 ' if es_hoy else ''}{nombres_dias[i]}**"
+                )
                 st.caption(format_date_es(str(dia)))
                 tareas_dia = [t for t in tareas_semana if t["date"] == str(dia)]
                 if tareas_dia:

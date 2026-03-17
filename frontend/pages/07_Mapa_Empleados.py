@@ -85,13 +85,13 @@ try:
 
 # Determina el rango de fechas a mostrar
     if ver_semana:
-        inicio_sem = fecha_sel - timedelta(days=fecha_sel.weekday())
-        fin_sem    = inicio_sem + timedelta(days=6)
-        tareas_dia = get_tasks_by_week(inicio_sem, fin_sem)
-        rango_txt  = f"{format_date_es(str(inicio_sem))} → {format_date_es(str(fin_sem))}"
+        inicio_sem  = fecha_sel - timedelta(days=fecha_sel.weekday())
+        fin_sem     = inicio_sem + timedelta(days=6)
+        tareas_dia  = get_tasks_by_week(inicio_sem, fin_sem)
+        rango_txt   = f"{format_date_es(str(inicio_sem))} → {format_date_es(str(fin_sem))}"
     else:
-        tareas_dia = get_tasks_by_day(fecha_sel)
-        rango_txt  = format_date_es(str(fecha_sel))
+        tareas_dia  = get_tasks_by_day(fecha_sel)
+        rango_txt   = format_date_es(str(fecha_sel))
 
     with col_info:
         st.markdown(f"**{rango_txt}**")
@@ -106,8 +106,9 @@ try:
                    f"{len(empleados)} empleados activos")
 
     if not tareas_dia:
-        st.info(f"No hay tareas programadas para el {format_date_es(str(fecha_sel))}.")
-        st.stop()
+        st.warning(f"No hay tareas para: {rango_txt}")
+    else:
+        st.success(f"✅ {len(tareas_dia)} tarea(s) encontradas")
 
     # ── Geocodificar empleados sin coordenadas ─────────────────
     empleados_sin_coords = [
