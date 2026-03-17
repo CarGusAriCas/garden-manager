@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     debug: bool = True
     database_url: str = "sqlite:///./database/garden_manager.db"
 
+    # GitHub
+    github_token: str = ""
+    github_repo:  str = "CarGusAriCas/garden-manager"
+
     class Config:
         env_file = ".env"
 
