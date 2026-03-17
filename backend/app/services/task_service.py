@@ -45,7 +45,7 @@ def get_all_tasks(db: Session, skip: int = 0, limit: int = 100) -> list[Task]:
             joinedload(Task.client),
             joinedload(Task.employees)
         )
-        .filter(Task.is_active == True)
+        .filter(Task.is_active.is_(True))
         .offset(skip)
         .limit(limit)
         .all()
@@ -64,7 +64,7 @@ def get_tasks_by_week(db: Session, start_date: date, end_date: date) -> list[Tas
         .filter(
             Task.date >= start_date,
             Task.date <= end_date,
-            Task.is_active == True
+            Task.is_active.is_(True)
         )
         .order_by(Task.date, Task.start_time)
         .all()
@@ -80,7 +80,7 @@ def get_tasks_by_date(db: Session, target_date: date) -> list[Task]:
             joinedload(Task.client),
             joinedload(Task.employees)
         )
-        .filter(Task.date == target_date, Task.is_active == True)
+        .filter(Task.date == target_date, Task.is_active.is_(True))
         .all()
     )
 
@@ -112,11 +112,19 @@ def create_task(db: Session, task_data: TaskCreate) -> Task:
     Returns:
         Tarea recién creada con empleados asignados
     """
+    # Valida que el cliente existe antes de crear la tarea
+    from app.models.client import Client
+    cliente = db.query(Client).filter(Client.id == task_data.client_id).first()
+    if not cliente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Cliente con ID {task_data.client_id} no encontrado"
+        )
+
     # Extrae los IDs de empleados antes de crear el objeto
     employee_ids = task_data.employee_ids
     task_dict    = task_data.model_dump(exclude={"employee_ids"})
-
-    db_task = Task(**task_dict)
+    db_task      = Task(**task_dict)
 
     # Asigna empleados si se proporcionaron
     if employee_ids:
@@ -128,6 +136,7 @@ def create_task(db: Session, task_data: TaskCreate) -> Task:
     db.refresh(db_task)
     # Recarga el objeto completo con todas sus relaciones
     return get_task_by_id(db, db_task.id)
+
 
 def update_task(db: Session, task_id: int, task_data: TaskUpdate) -> Task:
     """
