@@ -9,16 +9,18 @@ import os
 sys.path.append(os.path.dirname(__file__))
 
 from utils.api_client import get_clients, get_employees, get_tasks, get_jobs, get_absences, format_date_es
-from utils.responsive import apply_responsive_css, mobile_topbar
-
-apply_responsive_css()
-mobile_topbar()
+from utils.responsive import apply_responsive_css, mobile_topbar, device_selector, init_device
 
 st.set_page_config(
     page_title="Jardineando.es",
     page_icon="🌿",
     layout="wide"
 )
+
+apply_responsive_css()
+init_device()          # ← solo en Home.py, detecta el dispositivo
+device_selector()      # ← selector en sidebar
+mobile_topbar()        # ← topbar si es móvil
 
 # ── Detecta dispositivo via JS ─────────────────────────────────
 st.components.v1.html("""

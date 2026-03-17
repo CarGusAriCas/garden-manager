@@ -1,231 +1,178 @@
 """
-Utilidades para detección de dispositivo y layout responsive.
-Inyecta JavaScript para detectar el ancho de pantalla del cliente.
+Utilidades responsive para GardenManager.
+Detecta dispositivo y adapta la interfaz.
 """
 import streamlit as st
 import streamlit.components.v1 as components
 
 
-def detect_device() -> str:
-    """
-    Detecta el tipo de dispositivo mediante JavaScript.
-    Devuelve 'mobile', 'tablet' o 'desktop'.
-    """
-    # Inyecta JS que escribe el ancho en un elemento oculto
-    components.html("""
-        <script>
-            const width = window.innerWidth;
-            let device = 'desktop';
-            if (width < 768) device = 'mobile';
-            else if (width < 1024) device = 'tablet';
-
-            // Guarda en sessionStorage para persistir
-            sessionStorage.setItem('device_type', device);
-            sessionStorage.setItem('screen_width', width);
-
-            // Envía al padre (Streamlit) via postMessage
-            window.parent.postMessage({
-                type: 'device_info',
-                device: device,
-                width: width
-            }, '*');
-        </script>
-    """, height=0)
-
-    # Recupera de query params si está disponible
-    params = st.query_params
-    return params.get("device", "desktop")
-
-
-def get_columns(mobile: int = 1, tablet: int = 2, desktop: int = 3) -> int:
-    """
-    Devuelve el número de columnas apropiado según el dispositivo.
-
-    Args:
-        mobile: Columnas en móvil (por defecto 1)
-        tablet: Columnas en tablet (por defecto 2)
-        desktop: Columnas en escritorio (por defecto 3)
-
-    Returns:
-        Número de columnas para el dispositivo actual
-    """
-    device = st.session_state.get("device", "desktop")
-    if device == "mobile":
-        return mobile
-    elif device == "tablet":
-        return tablet
-    return desktop
-
-
 def apply_responsive_css():
-    """
-    Aplica CSS responsive global para mejorar la visualización
-    en dispositivos móviles y tablets.
-    """
+    """Aplica CSS responsive global."""
     st.markdown("""
         <style>
-        /* ── Móvil ──────────────────────────────────────── */
         @media (max-width: 768px) {
-            /* Oculta sidebar en móvil por defecto */
-            [data-testid="stSidebar"] {
-                width: 0 !important;
-                min-width: 0 !important;
-            }
-
-            /* Reduce padding en móvil */
             .block-container {
                 padding: 1rem !important;
                 max-width: 100% !important;
             }
-
-            /* Botones más grandes para táctil */
             .stButton button {
                 min-height: 48px !important;
                 font-size: 16px !important;
             }
-
-            /* Inputs más grandes */
-            .stTextInput input,
-            .stSelectbox select {
+            .stTextInput input {
                 min-height: 44px !important;
                 font-size: 16px !important;
             }
-
-            /* Métricas apiladas */
-            [data-testid="metric-container"] {
-                width: 100% !important;
-            }
-
-            /* Oculta elementos secundarios en móvil */
-            .hide-mobile {
-                display: none !important;
-            }
+            .hide-mobile { display: none !important; }
         }
-
-        /* ── Tablet ─────────────────────────────────────── */
         @media (min-width: 769px) and (max-width: 1024px) {
             .block-container {
                 padding: 1.5rem !important;
                 max-width: 100% !important;
             }
-
-            .stButton button {
-                min-height: 44px !important;
-            }
         }
-
-        /* ── Desktop ────────────────────────────────────── */
         @media (min-width: 1025px) {
-            .block-container {
-                max-width: 1400px !important;
-            }
+            .block-container { max-width: 1400px !important; }
         }
-
-        /* ── Global ─────────────────────────────────────── */
-        /* Mejora legibilidad en todas las pantallas */
-        .stMarkdown p {
-            line-height: 1.6 !important;
-        }
-
-        /* Contenedores con borde más compactos en móvil */
-        [data-testid="stVerticalBlockBorderWrapper"] {
-            padding: 0.5rem !important;
-        }
-
-        /* Mejora tablas en móvil */
-        .stDataFrame {
-            overflow-x: auto !important;
-        }
+        .stMarkdown p { line-height: 1.6 !important; }
+        .stDataFrame { overflow-x: auto !important; }
         </style>
     """, unsafe_allow_html=True)
 
 
-def device_selector():
+def init_device():
     """
-    Widget de selección manual de dispositivo para pruebas.
-    Solo visible en modo debug.
+    Inicializa la detección de dispositivo.
+    Usa un componente HTML que lee el ancho y lo guarda en query params.
+    Solo se ejecuta en Home.py una vez por sesión.
     """
-    if st.session_state.get("debug_mode"):
-        device = st.sidebar.selectbox(
-            "🔧 Simular dispositivo",
-            ["desktop", "tablet", "mobile"],
-            index=["desktop", "tablet", "mobile"].index(
-                st.session_state.get("device", "desktop")
-            )
-        )
+    if "device_detected" in st.session_state:
+        return
+
+    # Lee query param si ya está seteado
+    params = st.query_params
+    if "device" in params:
+        device = params["device"]
         st.session_state["device"] = device
+        st.session_state["device_detected"] = True
+        return
+
+    # Inyecta JS que detecta y redirige UNA sola vez
+    components.html("""
+        <script>
+            const w = window.parent.innerWidth;
+            let d = 'desktop';
+            if (w < 768) d = 'mobile';
+            else if (w < 1024) d = 'tablet';
+
+            const url = new URL(window.parent.location.href);
+            url.searchParams.set('device', d);
+            window.parent.location.replace(url.toString());
+        </script>
+    """, height=0)
 
 
 def mobile_topbar():
     """
-    Muestra una barra de navegación superior en móvil.
-    Solo visible cuando device == 'mobile'.
-    Oculta la sidebar completamente.
+    Topbar de navegación para móvil.
+    Lee el device desde query params directamente.
     """
+    # Lee device desde query params o session_state
+    params = st.query_params
+    if "device" in params:
+        st.session_state["device"] = params["device"]
+
     device = st.session_state.get("device", "desktop")
     if device != "mobile":
         return
 
-    # Oculta sidebar en móvil
+    # Oculta sidebar completamente
     st.markdown("""
         <style>
-        [data-testid="stSidebar"] { display: none !important; }
-        [data-testid="collapsedControl"] { display: none !important; }
-        .block-container { padding-top: 0.5rem !important; }
+        [data-testid="stSidebar"],
+        [data-testid="collapsedControl"] {
+            display: none !important;
+        }
+        .block-container {
+            padding-top: 0.5rem !important;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-    # ── Fila 1 — Atrás + Logo + Sugerencias ───────────────────
-    col_back, col_title, col_suggest = st.columns([1, 5, 1])
-    with col_back:
-        if st.button("◀", key="topbar_back", use_container_width=True):
+    # Fila 1 — Atrás + título + sugerencias
+    c_back, c_title, c_sug = st.columns([1, 5, 1])
+    with c_back:
+        if st.button("◀", key="tb_back", use_container_width=True):
             st.switch_page("Home.py")
-    with col_title:
+    with c_title:
         st.markdown("**🌿 GardenManager**")
-    with col_suggest:
-        if st.button("💡", key="topbar_suggest", use_container_width=True):
+    with c_sug:
+        if st.button("💡\nSugerencias", key="tb_sug", use_container_width=True):
             st.switch_page("pages/08_Sugerencias.py")
 
-    # ── Fila 2 — Navegación principal ─────────────────────────
+    # Fila 2 — navegación principal
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        if st.button("👤\nClientes",  key="top_cli", use_container_width=True):
+        if st.button("👤\nClientes",  key="tb_cli", use_container_width=True):
             st.switch_page("pages/01_Clientes.py")
     with c2:
-        if st.button("👷\nEmpleados", key="top_emp", use_container_width=True):
+        if st.button("👷\nEmpleados", key="tb_emp", use_container_width=True):
             st.switch_page("pages/02_Empleados.py")
     with c3:
-        if st.button("📅\nTareas",    key="top_tar", use_container_width=True):
+        if st.button("📅\nTareas",    key="tb_tar", use_container_width=True):
             st.switch_page("pages/03_Tareas.py")
     with c4:
-        if st.button("🏖️\nAusencias", key="top_aus", use_container_width=True):
+        if st.button("🏖️\nAusencias", key="tb_aus", use_container_width=True):
             st.switch_page("pages/04_Ausencias.py")
 
-    # ── Fila 3 — Navegación secundaria ────────────────────────
+    # Fila 3 — navegación secundaria
     c5, c6, c7, c8 = st.columns(4)
     with c5:
-        if st.button("📋\nTrabajos",  key="top_job", use_container_width=True):
+        if st.button("📋\nTrabajos",  key="tb_job", use_container_width=True):
             st.switch_page("pages/05_Trabajos.py")
     with c6:
-        if st.button("🗺️\nMapa",      key="top_map", use_container_width=True):
+        if st.button("🗺️\nMapa",      key="tb_map", use_container_width=True):
             st.switch_page("pages/06_Mapa.py")
     with c7:
-        if st.button("🧭\nRutas",     key="top_rut", use_container_width=True):
+        if st.button("🧭\nRutas",     key="tb_rut", use_container_width=True):
             st.switch_page("pages/07_Mapa_Empleados.py")
     with c8:
-        if st.button("🏠\nInicio",    key="top_hom", use_container_width=True):
+        if st.button("🏠\nInicio",    key="tb_hom", use_container_width=True):
             st.switch_page("Home.py")
 
     st.divider()
 
 
 def back_button(label: str = "◀ Volver al inicio"):
-    """
-    Muestra un botón de volver en desktop y tablet.
-    En móvil no hace falta porque ya está en la topbar.
-    """
+    """Botón de volver para desktop y tablet."""
     device = st.session_state.get("device", "desktop")
     if device == "mobile":
         return
     if st.button(label, key="back_btn"):
         st.switch_page("Home.py")
+
+
+def device_selector():
+    """Selector manual de dispositivo en el sidebar."""
+    st.sidebar.markdown("### 🌿 GardenManager")
+    st.sidebar.divider()
+
+    device_actual = st.session_state.get("device", "desktop")
+    opciones      = ["auto", "desktop", "tablet", "mobile"]
+    idx           = opciones.index(device_actual) if device_actual in opciones else 0
+
+    seleccion = st.sidebar.selectbox(
+        "🔧 Vista",
+        opciones,
+        index=idx,
+        label_visibility="collapsed"
+    )
+
+    if seleccion != "auto":
+        st.session_state["device"] = seleccion
+    elif "device" not in st.session_state:
+        st.session_state["device"] = "desktop"
+
+    st.sidebar.divider()
+    if st.sidebar.button("💡 Sugerencias", use_container_width=True):
+        st.switch_page("pages/08_Sugerencias.py")

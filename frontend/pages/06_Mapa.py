@@ -11,7 +11,7 @@ from streamlit_folium import st_folium
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import get_clients, update_client_coordinates, geocode_address
+from utils.api_client import get_clients, update_client_coordinates
 
 apply_responsive_css()
 mobile_topbar()
