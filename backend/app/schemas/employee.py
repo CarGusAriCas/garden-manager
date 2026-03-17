@@ -15,6 +15,8 @@ class EmployeeBase(BaseModel):
     role:       str            = Field("Jardinero", max_length=50,  description="Cargo o puesto")
     speciality: Optional[str]  = Field(None, max_length=100, description="Especialidad")
     hire_date:  Optional[date] = Field(None,                 description="Fecha de incorporación")
+    latitude:  Optional[float] = Field(None, description="Latitud")
+    longitude: Optional[float] = Field(None, description="Longitud")
 
 
 class EmployeeCreate(EmployeeBase):

@@ -2,7 +2,7 @@
 Modelo de base de datos para los empleados.
 Define la tabla 'employees' y sus columnas.
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Float
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -34,11 +34,16 @@ class Employee(Base):
     role        = Column(String(50),  nullable=False, default="Jardinero")
     speciality  = Column(String(100), nullable=True)
     hire_date   = Column(Date,        nullable=True)
-    is_active   = Column(Boolean,     default=True)
+    is_active   = Column(Boolean,     default=True, index=True)
     created_at  = Column(DateTime,    server_default=func.now())
     updated_at  = Column(DateTime,    server_default=func.now(), onupdate=func.now())
 
+    # Coordenadas geográficas
+    latitude  = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+
     # Relación: un empleado puede tener muchas tareas
     tasks = relationship("Task", secondary="task_employees", back_populates="employees")
+
     # Relación: un empleado puede tener muchas ausencias
     absences = relationship("Absence", back_populates="employee")

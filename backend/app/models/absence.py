@@ -28,13 +28,13 @@ class Absence(Base):
     __tablename__ = "absences"
 
     id           = Column(Integer,    primary_key=True, index=True)
-    employee_id  = Column(Integer,    ForeignKey("employees.id"), nullable=False)
+    employee_id  = Column(Integer,    ForeignKey("employees.id"), nullable=False, index=True)
     absence_type = Column(String(30), nullable=False, default="vacaciones")
-    start_date   = Column(Date,       nullable=False)
-    end_date     = Column(Date,       nullable=False)
+    start_date   = Column(Date,       nullable=False, index=True)
+    end_date     = Column(Date,       nullable=False, index=True)
     reason       = Column(Text,       nullable=True)
-    is_approved  = Column(Boolean,    default=False)
-    is_active    = Column(Boolean,    default=True)
+    is_approved  = Column(Boolean,    default=False, index=True)
+    is_active    = Column(Boolean,    default=True, index=True)
     created_at   = Column(DateTime,   server_default=func.now())
     updated_at   = Column(DateTime,   server_default=func.now(), onupdate=func.now())
 

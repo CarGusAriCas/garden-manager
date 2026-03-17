@@ -32,7 +32,7 @@ class Client(Base):
     email      = Column(String(100), unique=True, nullable=True)
     address    = Column(String(200), nullable=True)
     notes      = Column(String(500), nullable=True)
-    is_active  = Column(Boolean,     default=True)
+    is_active  = Column(Boolean,     default=True, index=True)
     created_at = Column(DateTime,    server_default=func.now())
     updated_at = Column(DateTime,    server_default=func.now(), onupdate=func.now())
 

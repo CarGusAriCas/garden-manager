@@ -37,9 +37,14 @@ def _get_employees_by_ids(db: Session, employee_ids: list[int]) -> list[Employee
 
 
 def get_all_tasks(db: Session, skip: int = 0, limit: int = 100) -> list[Task]:
-    """Obtiene todas las tareas activas con paginación."""
+    """Obtiene todas las tareas activas cargando relaciones en una sola consulta."""
+    from sqlalchemy.orm import joinedload
     return (
         db.query(Task)
+        .options(
+            joinedload(Task.client),
+            joinedload(Task.employees)
+        )
         .filter(Task.is_active == True)
         .offset(skip)
         .limit(limit)
@@ -47,46 +52,35 @@ def get_all_tasks(db: Session, skip: int = 0, limit: int = 100) -> list[Task]:
     )
 
 
-def get_tasks_by_date(db: Session, target_date: date) -> list[Task]:
-    """
-    Obtiene todas las tareas de una fecha concreta.
-    Útil para la vista de agenda diaria.
-
-    Args:
-        db: Sesión de base de datos
-        target_date: Fecha a consultar
-
-    Returns:
-        Lista de tareas de ese día
-    """
-    return (
-        db.query(Task)
-        .filter(Task.date == target_date, Task.is_active == True)
-        .all()
-    )
-
-
 def get_tasks_by_week(db: Session, start_date: date, end_date: date) -> list[Task]:
-    """
-    Obtiene las tareas entre dos fechas.
-    Útil para la vista de agenda semanal.
-
-    Args:
-        db: Sesión de base de datos
-        start_date: Fecha de inicio del rango
-        end_date: Fecha de fin del rango
-
-    Returns:
-        Lista de tareas en ese rango de fechas
-    """
+    """Obtiene tareas de una semana cargando relaciones en una sola consulta."""
+    from sqlalchemy.orm import joinedload
     return (
         db.query(Task)
+        .options(
+            joinedload(Task.client),
+            joinedload(Task.employees)
+        )
         .filter(
             Task.date >= start_date,
             Task.date <= end_date,
             Task.is_active == True
         )
         .order_by(Task.date, Task.start_time)
+        .all()
+    )
+
+
+def get_tasks_by_date(db: Session, target_date: date) -> list[Task]:
+    """Obtiene tareas de un día cargando relaciones en una sola consulta."""
+    from sqlalchemy.orm import joinedload
+    return (
+        db.query(Task)
+        .options(
+            joinedload(Task.client),
+            joinedload(Task.employees)
+        )
+        .filter(Task.date == target_date, Task.is_active == True)
         .all()
     )
 

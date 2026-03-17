@@ -135,3 +135,24 @@ def get_available_employees(db: Session) -> list[Employee]:
         Lista de empleados disponibles
     """
     return db.query(Employee).filter(Employee.is_active == True).all()
+
+
+def update_employee_coordinates(db: Session, employee_id: int, lat: float, lon: float) -> Employee:
+    """
+    Actualiza las coordenadas geográficas de un empleado.
+
+    Args:
+        db: Sesión de base de datos
+        employee_id: ID del empleado
+        lat: Latitud
+        lon: Longitud
+
+    Returns:
+        Empleado actualizado
+    """
+    employee           = get_employee_by_id(db, employee_id)
+    employee.latitude  = lat
+    employee.longitude = lon
+    db.commit()
+    db.refresh(employee)
+    return employee

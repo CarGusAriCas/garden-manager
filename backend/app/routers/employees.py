@@ -52,3 +52,14 @@ def update_employee(employee_id: int, employee_data: EmployeeUpdate, db: Session
 def delete_employee(employee_id: int, db: Session = Depends(get_db)):
     """Desactiva un empleado (borrado lógico)."""
     return employee_service.delete_employee(db, employee_id)
+
+
+@router.patch("/{employee_id}/coordinates")
+def set_employee_coordinates(
+    employee_id: int,
+    lat: float,
+    lon: float,
+    db: Session = Depends(get_db)
+):
+    """Actualiza las coordenadas geográficas de un empleado."""
+    return employee_service.update_employee_coordinates(db, employee_id, lat, lon)
