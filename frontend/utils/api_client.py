@@ -61,23 +61,27 @@ def parse_date_api(d: date) -> str:
 
 
 def geocode_address(address: str):
-    """
-    Convierte una dirección en coordenadas lat/lon.
-    Usa Nominatim (OpenStreetMap) — gratuito, sin API key.
-    """
     from geopy.geocoders import Nominatim
     from geopy.extra.rate_limiter import RateLimiter
-    from geopy.exc import GeocoderTimedOut
+    from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
     try:
-        geolocator = Nominatim(user_agent="garden_manager")
-        geocode    = RateLimiter(geolocator.geocode, min_delay_seconds=1)
-        location   = geocode(address)
+        geolocator = Nominatim(
+            user_agent="garden_manager_mlg",
+            timeout=10                          # ← sube de 1 a 10 segundos
+        )
+        geocode = RateLimiter(
+            geolocator.geocode,
+            min_delay_seconds=1.1,              # ← respeta límite Nominatim
+            max_retries=2,
+            error_wait_seconds=3,               # ← espera 3s antes de reintentar
+            swallow_exceptions=True             # ← no bloquea si falla uno
+        )
+        location = geocode(address)
         if location:
             return location.latitude, location.longitude
         return None, None
-    except GeocoderTimedOut:
+    except (GeocoderTimedOut, GeocoderUnavailable):
         return None, None
-
 
 # ── Clientes ───────────────────────────────────────────────────
 
