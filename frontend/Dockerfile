@@ -17,7 +17,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia requirements primero para aprovechar caché
-COPY requirements-frontend.txt .
+COPY requirements.txt .
 
 # Instala dependencias Python sin caché
 RUN pip install --no-cache-dir --upgrade pip \

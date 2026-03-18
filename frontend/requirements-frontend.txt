@@ -1,6 +1,0 @@
-streamlit==1.55.0
-httpx
-folium
-streamlit-folium
-geopy
-python-dotenv
