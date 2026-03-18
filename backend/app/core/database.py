@@ -9,11 +9,14 @@ from app.core.config import settings
 
 
 # Motor de base de datos
-# check_same_thread=False es necesario solo para SQLite
-engine = create_engine(
-    settings.database_url,
-    connect_args={"check_same_thread": False}
-)
+# check_same_thread solo es necesario para SQLite
+if settings.database_url.startswith("sqlite"):
+    engine = create_engine(
+        settings.database_url,
+        connect_args={"check_same_thread": False}
+    )
+else:
+    engine = create_engine(settings.database_url)
 
 # Fábrica de sesiones: cada petición HTTP abrirá una sesión
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

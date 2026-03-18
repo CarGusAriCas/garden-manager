@@ -32,36 +32,26 @@ def geocode_all_clients():
 
         for i, c in enumerate(clientes):
             try:
-                # Intento 1 — dirección completa
-                location = geolocator.geocode(c.address)
-
-                # Intento 2 — solo la zona (última parte de la dirección)
-                if not location:
-                    partes   = c.address.split(",")
-                    zona     = ", ".join(partes[-2:]).strip() if len(partes) > 1 else c.address
-                    location = geolocator.geocode(zona)
-                    time.sleep(1.5)
-
-                # Intento 3 — solo ciudad
-                if not location:
-                    ciudad   = partes[-1].strip() if partes else "Málaga"
-                    location = geolocator.geocode(f"{ciudad}, España")
-                    time.sleep(1.5)
-
-                if location:
-                    c.latitude  = location.latitude
-                    c.longitude = location.longitude
-                    db.commit()
-                    print(f"   ✅ [{i+1}/{len(clientes)}] {c.name} → {location.address[:50]}")
-                    ok += 1
+                # Construye dirección con código postal si está disponible
+                address_query = c.address
+                if c.postal_code:
+                    address_query = f"{c.address}, {c.postal_code}, España"
                 else:
-                    # Fallback — coordenadas del centro de Málaga
-                    c.latitude  = 36.7213 + (i * 0.001)  # pequeño offset para no apilar
-                    c.longitude = -4.4214 + (i * 0.001)
-                    db.commit()
-                    print(f"   📍 [{i+1}/{len(clientes)}] {c.name} — usando centro Málaga")
-                    ok += 1
+                    address_query = f"{c.address}, España"
 
+                location = geolocator.geocode(address_query)
+
+                # Intento 2 — sin número de calle
+                if not location and c.postal_code:
+                    partes   = c.address.split(",")
+                    zona     = ", ".join(partes[-2:]).strip()
+                    location = geolocator.geocode(f"{zona}, {c.postal_code}, España")
+                    time.sleep(1.5)
+
+                # Fallback — solo código postal
+                if not location and c.postal_code:
+                    location = geolocator.geocode(f"{c.postal_code}, España")
+                    time.sleep(1.5)
             except (GeocoderTimedOut, GeocoderUnavailable) as e:
                 print(f"   ❌ [{i+1}/{len(clientes)}] {c.name} — {e}")
                 fallo += 1

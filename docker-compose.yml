@@ -1,0 +1,64 @@
+services:
+
+  # ── Base de datos PostgreSQL ───────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: garden_db
+    environment:
+      POSTGRES_DB:       garden_manager
+      POSTGRES_USER:     garden_user
+      POSTGRES_PASSWORD: garden_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U garden_user -d garden_manager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend FastAPI ────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: garden_backend
+    env_file:
+      - ./backend/.env 
+    environment:
+      DATABASE_URL:          postgresql://garden_user:garden_pass@db:5432/garden_manager
+      API_URL:               http://backend:8000
+      DEBUG:                 "false"
+      GITHUB_TOKEN:          ${GITHUB_TOKEN}
+      GITHUB_REPO:           ${GITHUB_REPO}
+      TWILIO_ACCOUNT_SID:    ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN:     ${TWILIO_AUTH_TOKEN}
+      TWILIO_WHATSAPP_FROM:  ${TWILIO_WHATSAPP_FROM}
+      TELEGRAM_TOKEN:        ${TELEGRAM_TOKEN}
+      TELEGRAM_CHAT_ID:      ${TELEGRAM_CHAT_ID}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  # ── Frontend Streamlit ─────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: garden_frontend
+    environment:
+      API_URL: http://backend:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

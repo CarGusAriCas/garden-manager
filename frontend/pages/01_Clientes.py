@@ -84,6 +84,7 @@ with tab_nuevo:
         phone   = st.text_input("Teléfono",          placeholder="612 345 678")
         email   = st.text_input("Email",             placeholder="maria@ejemplo.com")
         address = st.text_input("Dirección",         placeholder="Calle Mayor 12, Madrid")
+        postal_code = st.text_input("Código postal", placeholder="29001", max_chars=5)
         notes   = st.text_area("Notas",              placeholder="Observaciones sobre el cliente...")
 
         submitted = st.form_submit_button("➕ Crear cliente", use_container_width=True)
@@ -98,6 +99,7 @@ with tab_nuevo:
                         "phone":   phone   or None,
                         "email":   email   or None,
                         "address": address or None,
+                        "postal_code": postal_code or None,
                         "notes":   notes   or None,
                     })
                     st.success(f"✅ Cliente '{name}' creado correctamente.")
