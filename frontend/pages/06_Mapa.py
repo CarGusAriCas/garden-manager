@@ -41,50 +41,30 @@ try:
         # ── Geocodificar clientes sin coordenadas ──────────────
         sin_coords = [c for c in clientes if not c.get("latitude") and c.get("address")]
         if sin_coords:
-            col_warn, col_refresh = st.columns([4, 1])
-            with col_warn:
-                st.warning(f"⚠️ {len(sin_coords)} cliente(s) sin ubicación en el mapa.")
-            with col_refresh:
-                if st.button("🔄 Refrescar", use_container_width=True):
+            st.warning(f"⚠️ {len(sin_coords)} cliente(s) sin ubicación.")
+
+            with st.expander(f"📍 Asignar ubicación manualmente ({len(sin_coords)} pendientes)"):
+                cliente_sel = st.selectbox(
+                    "Selecciona cliente",
+                    [c["name"] for c in sin_coords],
+                    key="sel_sin_coords"
+                )
+                c = next(c for c in sin_coords if c["name"] == cliente_sel)
+                st.caption(f"📍 Dirección: {c.get('address', '—')}")
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    lat = st.number_input("Latitud",  value=36.7213, format="%.6f", key="lat_manual")
+                with col2:
+                    lon = st.number_input("Longitud", value=-4.4214, format="%.6f", key="lon_manual")
+
+                st.caption("💡 Busca la dirección en [Google Maps](https://maps.google.com), haz clic derecho y copia las coordenadas.")
+
+                if st.button("💾 Guardar coordenadas", use_container_width=True):
+                    update_client_coordinates(c["id"], lat, lon)
                     st.cache_data.clear()
+                    st.success(f"✅ Coordenadas guardadas para {c['name']}")
                     st.rerun()
-            if st.button("🌍 Obtener coordenadas automáticamente", use_container_width=True):
-                progress = st.progress(0, text="Iniciando geocodificación...")
-                from geopy.geocoders import Nominatim
-                from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
-                import time
-
-                geolocator = Nominatim(user_agent="garden_manager_mlg_v2", timeout=10)
-                ok = 0
-                fallo = 0
-
-                for i, c in enumerate(sin_coords):
-                    try:
-                        location = geolocator.geocode(c["address"])
-                        if location:
-                            update_client_coordinates(c["id"], location.latitude, location.longitude)
-                            c["latitude"]  = location.latitude
-                            c["longitude"] = location.longitude
-                            ok += 1
-                        else:
-                            fallo += 1
-                    except (GeocoderTimedOut, GeocoderUnavailable):
-                        fallo += 1
-
-                    progress.progress(
-                        (i + 1) / len(sin_coords),
-                        text=f"Geocodificando {i+1}/{len(sin_coords)}: {c['name']}"
-                    )
-                    time.sleep(1.5)  # Respeta límite Nominatim
-
-                progress.empty()
-                st.cache_data.clear()
-
-                if ok > 0:
-                    st.success(f"✅ {ok} cliente(s) geocodificados correctamente.")
-                if fallo > 0:
-                    st.warning(f"⚠️ {fallo} cliente(s) no pudieron geocodificarse.")
-                st.rerun()
 
         # ── Clasificar ─────────────────────────────────────────
         con_coords  = [c for c in clientes if c.get("latitude") and c.get("longitude")]

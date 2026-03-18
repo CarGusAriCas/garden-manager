@@ -18,6 +18,15 @@ geolocator = Nominatim(user_agent="garden_manager_mlg_v3", timeout=15)
 
 def geocode_all_clients():
     db = SessionLocal()
+    COORDS_ZONA = {
+        "churriana":    (36.6697, -4.5539),
+        "guadalmar":    (36.6748, -4.5367),
+        "torremolinos": (36.6213, -4.4993),
+        "málaga":       (36.7213, -4.4214),
+        "malaga":       (36.7213, -4.4214),
+        "cádiz":        (36.6900, -4.5100),
+        "cadiz":        (36.6900, -4.5100),
+    }
     try:
         clientes = db.query(Client).filter(
             Client.is_active.is_(True),
@@ -46,16 +55,15 @@ def geocode_all_clients():
 
                 # Fallback — coordenadas del centro de Málaga con offset
                 if not location:
-                    c.latitude  = 36.7213 + (i * 0.001)
-                    c.longitude = -4.4214 + (i * 0.001)
+                    address_lower = (c.address or "").lower()
+                    coords = next(
+                        (v for k, v in COORDS_ZONA.items() if k in address_lower),
+                        (36.7213, -4.4214)  # Centro Málaga si no hay zona
+                    )
+                    c.latitude  = coords[0]
+                    c.longitude = coords[1]
                     db.commit()
-                    print(f"   📍 [{i+1}/{len(clientes)}] {c.name} — usando centro Málaga")
-                    ok += 1
-                else:
-                    c.latitude  = location.latitude
-                    c.longitude = location.longitude
-                    db.commit()
-                    print(f"   ✅ [{i+1}/{len(clientes)}] {c.name} → {location.address[:50]}")
+                    print(f"   📍 [{i+1}/{len(clientes)}] {c.name} — zona: {coords}")
                     ok += 1
 
             except Exception as e:

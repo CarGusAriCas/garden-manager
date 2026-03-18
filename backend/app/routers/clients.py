@@ -26,6 +26,21 @@ def list_clients(
     return client_service.get_all_clients(db, skip=skip, limit=limit)
 
 
+@router.get("/coords-status")
+def coords_status(db: Session = Depends(get_db)):
+    """Diagnóstico del estado de coordenadas."""
+    total = db.query(Client).filter(Client.is_active.is_(True)).count()
+    con   = db.query(Client).filter(
+        Client.is_active.is_(True),
+        Client.latitude.isnot(None)
+    ).count()
+    sin   = db.query(Client).filter(
+        Client.is_active.is_(True),
+        Client.latitude.is_(None)
+    ).count()
+    return {"total": total, "con_coordenadas": con, "sin_coordenadas": sin}
+
+
 @router.get("/{client_id}", response_model=ClientResponse)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     """Devuelve un cliente específico por su ID."""
