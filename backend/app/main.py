@@ -1,18 +1,16 @@
 """
 Punto de entrada principal de la aplicación GardenManager.
 Aquí se inicializa FastAPI y se registran todos los routers.
+Las migraciones de BD las gestiona Alembic — no usar create_all aquí.
 """
 from fastapi import FastAPI
 from app.core.config import settings
-from app.core.database import Base, engine
 from app.routers import clients
 from app.routers import employees
 from app.routers import tasks
 from app.routers import jobs
 from app.routers import absences
 from app.routers import notifications
-
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.app_name,
@@ -27,14 +25,15 @@ app.include_router(jobs.router)
 app.include_router(absences.router)
 app.include_router(notifications.router)
 
+
 @app.get("/")
 def root():
     """Endpoint de bienvenida para verificar que el servidor funciona."""
     return {
-        "app": settings.app_name,
+        "app":     settings.app_name,
         "version": settings.app_version,
-        "status": "funcionando",
-        "docs": "/docs"
+        "status":  "funcionando",
+        "docs":    "/docs"
     }
 
 
