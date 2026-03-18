@@ -70,24 +70,36 @@ def geocode_all_clients(db: Session = Depends(get_db)):
     import time
     from geopy.geocoders import Nominatim
 
-    geolocator = Nominatim(user_agent="garden_manager_prod_v1", timeout=15)
-    clientes    = db.query(Client).filter(
+    COORDS_ZONA = {
+        "churriana":    (36.6697, -4.5539),
+        "guadalmar":    (36.6748, -4.5367),
+        "torremolinos": (36.6213, -4.4993),
+        "málaga":       (36.7213, -4.4214),
+        "malaga":       (36.7213, -4.4214),
+        "cádiz":        (36.6900, -4.5100),
+        "cadiz":        (36.6900, -4.5100),
+    }
+
+    geolocator = Nominatim(user_agent="garden_manager_prod_v2", timeout=15)
+    clientes   = db.query(Client).filter(
         Client.is_active.is_(True),
         Client.latitude.is_(None)
     ).all()
 
     resultados = {"ok": 0, "fallo": 0, "total": len(clientes)}
 
-    for c in clientes:
+    for i, c in enumerate(clientes):
         try:
+            # Intento 1 — dirección completa con código postal
             query    = f"{c.address}, {c.postal_code}, España" if c.postal_code else f"{c.address}, España"
             location = geolocator.geocode(query)
             time.sleep(1.5)
 
-            if not location:
+            # Intento 2 — zona y código postal
+            if not location and c.postal_code:
                 partes   = c.address.split(",")
                 zona     = ", ".join(partes[-2:]).strip()
-                location = geolocator.geocode(f"{zona}, España")
+                location = geolocator.geocode(f"{zona}, {c.postal_code}, España")
                 time.sleep(1.5)
 
             if location:
@@ -96,8 +108,14 @@ def geocode_all_clients(db: Session = Depends(get_db)):
                 db.commit()
                 resultados["ok"] += 1
             else:
-                c.latitude  = 36.7213 + (resultados["fallo"] * 0.001)
-                c.longitude = -4.4214 + (resultados["fallo"] * 0.001)
+                # Fallback — coordenadas por zona
+                address_lower = (c.address or "").lower()
+                coords = next(
+                    (v for k, v in COORDS_ZONA.items() if k in address_lower),
+                    (36.7213 + (i * 0.001), -4.4214 + (i * 0.001))
+                )
+                c.latitude  = coords[0]
+                c.longitude = coords[1]
                 db.commit()
                 resultados["fallo"] += 1
 
