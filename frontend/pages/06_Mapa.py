@@ -11,7 +11,7 @@ from streamlit_folium import st_folium
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import get_clients, update_client_coordinates
+from utils.api_client import get_clients, update_client_coordinates, geocode_address
 
 apply_responsive_css()
 mobile_topbar()
@@ -41,30 +41,96 @@ try:
         # ── Geocodificar clientes sin coordenadas ──────────────
         sin_coords = [c for c in clientes if not c.get("latitude") and c.get("address")]
         if sin_coords:
-            st.warning(f"⚠️ {len(sin_coords)} cliente(s) sin ubicación.")
+            st.warning(f"⚠️ {len(sin_coords)} cliente(s) sin ubicación en el mapa.")
 
-            with st.expander(f"📍 Asignar ubicación manualmente ({len(sin_coords)} pendientes)"):
+            with st.expander(f"📍 Ubicar clientes pendientes ({len(sin_coords)})"):
                 cliente_sel = st.selectbox(
                     "Selecciona cliente",
                     [c["name"] for c in sin_coords],
                     key="sel_sin_coords"
                 )
-                c = next(c for c in sin_coords if c["name"] == cliente_sel)
-                st.caption(f"📍 Dirección: {c.get('address', '—')}")
+                c = next(cl for cl in sin_coords if cl["name"] == cliente_sel)
+                direccion = c.get("address", "")
+                cp        = c.get("postal_code", "")
 
-                col1, col2 = st.columns(2)
-                with col1:
-                    lat = st.number_input("Latitud",  value=36.7213, format="%.6f", key="lat_manual")
-                with col2:
-                    lon = st.number_input("Longitud", value=-4.4214, format="%.6f", key="lon_manual")
+                st.markdown(f"**👤 {c['name']}**")
+                st.caption(f"📍 Dirección registrada: {direccion}")
+                st.divider()
 
-                st.caption("💡 Busca la dirección en [Google Maps](https://maps.google.com), haz clic derecho y copia las coordenadas.")
+                # ── Paso 1: Corregir dirección y geocodificar ──
+                st.markdown("**1️⃣ Corrige la dirección si es necesario:**")
+                nueva_dir = st.text_input(
+                    "Dirección",
+                    value=f"{direccion}, {cp}, España" if cp else f"{direccion}, España",
+                    key="dir_corregida",
+                    label_visibility="collapsed"
+                )
 
-                if st.button("💾 Guardar coordenadas", use_container_width=True):
-                    update_client_coordinates(c["id"], lat, lon)
-                    st.cache_data.clear()
-                    st.success(f"✅ Coordenadas guardadas para {c['name']}")
-                    st.rerun()
+                if st.button("🔍 Buscar automáticamente", use_container_width=True, key="btn_geocode"):
+                    with st.spinner("Buscando..."):
+                        lat, lon = geocode_address(nueva_dir)
+                    if lat and lon:
+                        st.session_state["coords_encontradas"] = (lat, lon)
+                        st.success(f"✅ Encontrado: {lat:.6f}, {lon:.6f}")
+                    else:
+                        st.session_state["coords_encontradas"] = None
+                        st.warning("⚠️ No se encontró automáticamente. Usa el mapa para ubicarlo.")
+
+                st.divider()
+
+                # ── Paso 2: Mapa interactivo para clic manual ──
+                st.markdown("**2️⃣ O haz clic en el mapa para ubicarlo:**")
+                st.caption("Navega hasta la dirección y haz clic en el punto exacto.")
+
+                # Centro del mapa — usa coords encontradas o Málaga
+                coords_prev = st.session_state.get("coords_encontradas")
+                centro = [coords_prev[0], coords_prev[1]] if coords_prev else [36.7213, -4.4214]
+                zoom   = 16 if coords_prev else 12
+
+                mapa_ubicar = folium.Map(location=centro, zoom_start=zoom, tiles="OpenStreetMap")
+
+                # Marcador si hay coords previas
+                if coords_prev:
+                    folium.Marker(
+                        location=centro,
+                        tooltip="📍 Posición encontrada — haz clic para mover",
+                        icon=folium.Icon(color="green", icon="map-marker", prefix="fa")
+                    ).add_to(mapa_ubicar)
+
+                resultado = st_folium(
+                    mapa_ubicar,
+                    height=350,
+                    use_container_width=True,
+                    returned_objects=["last_clicked"],
+                    key=f"mapa_ubicar_{c['id']}"
+                )
+
+                # Coordenadas finales — clic en mapa tiene prioridad
+                lat_final = None
+                lon_final = None
+
+                if resultado.get("last_clicked"):
+                    lat_final = resultado["last_clicked"]["lat"]
+                    lon_final = resultado["last_clicked"]["lng"]
+                    st.info(f"📍 Punto seleccionado: {lat_final:.6f}, {lon_final:.6f}")
+                elif coords_prev:
+                    lat_final = coords_prev[0]
+                    lon_final = coords_prev[1]
+                    st.info(f"📍 Usando coordenadas encontradas: {lat_final:.6f}, {lon_final:.6f}")
+
+                st.divider()
+
+                # ── Paso 3: Guardar ────────────────────────────
+                if lat_final and lon_final:
+                    if st.button("💾 Guardar ubicación", use_container_width=True, key="btn_guardar_coords", type="primary"):
+                        update_client_coordinates(c["id"], lat_final, lon_final)
+                        if "coords_encontradas" in st.session_state:
+                            del st.session_state["coords_encontradas"]
+                        st.cache_data.clear()
+                        st.success(f"✅ {c['name']} ubicado correctamente.")
+                        st.rerun()
+                else:
+                    st.button("💾 Guardar ubicación", use_container_width=True, disabled=True, help="Busca la dirección o haz clic en el mapa primero")
 
         # ── Clasificar ─────────────────────────────────────────
         con_coords  = [c for c in clientes if c.get("latitude") and c.get("longitude")]
