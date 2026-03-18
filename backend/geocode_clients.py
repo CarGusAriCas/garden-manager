@@ -12,7 +12,6 @@ from app.models import client, employee, task, job, absence # noqa
 from app.core.database import SessionLocal
 from app.models.client import Client
 from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 
 geolocator = Nominatim(user_agent="garden_manager_mlg_v3", timeout=15)
 

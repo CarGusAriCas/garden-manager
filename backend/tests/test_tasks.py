@@ -96,7 +96,7 @@ class TestTareasCRUD:
 
 
     class TestAusencias:
-    """Tests del módulo de ausencias."""
+        """Tests del módulo de ausencias."""
 
     def test_crear_ausencia(self, client, empleado_ejemplo):
         """Debe crear una ausencia para un empleado."""

@@ -4,8 +4,6 @@ Empresa de jardinería en Málaga capital y alrededores.
 Ejecutar con el servidor activo: python seed.py
 """
 import requests
-from datetime import date, datetime, timedelta
-import random
 
 BASE_URL = "http://localhost:8000"
 
@@ -389,7 +387,7 @@ def seed():
     for w in TRABAJOS_CON_INCIDENCIAS:
         task_id = ids_tareas[w["task_idx"]]
         if not task_id:
-            print(f"   ⚠️  Trabajo — tarea no disponible")
+            print("   ⚠️  Trabajo — tarea no disponible")
             continue
 
         payload = {
