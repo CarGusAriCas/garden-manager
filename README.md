@@ -4,18 +4,30 @@ API de gestión para empresa de jardinería desarrollada como proyecto de portfo
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat&logo=fastapi&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.3+-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.37+-FF4B4B?style=flat&logo=streamlit&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white)
-![Folium](https://img.shields.io/badge/Folium-Maps-77B829?style=flat)
-![Tests](https://img.shields.io/badge/Tests-24%20passing-brightgreen?style=flat)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-38%20passing-brightgreen?style=flat)
+![JWT](https://img.shields.io/badge/Auth-JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
 ![Twilio](https://img.shields.io/badge/Twilio-WhatsApp-F22F46?style=flat&logo=twilio&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram-Bot-26A5E4?style=flat&logo=telegram&logoColor=white)
 
 ---
 
+## 🌐 Demo en producción
+
+- **Frontend:** https://garden-manager.streamlit.app
+- **Backend API:** https://garden-manager-odpo.onrender.com
+- **API Docs:** https://garden-manager-odpo.onrender.com/docs
+
+> ⚠️ El backend usa el plan gratuito de Render — puede tardar hasta 50 segundos en despertar tras inactividad.
+
+---
+
 ## 📋 Descripción
 
-GardenManager es una aplicación web full-stack para la gestión integral de una empresa de jardinería. Permite gestionar clientes, empleados, planificación de tareas, registro de trabajos realizados, checklists de verificación, incidencias, control de ausencias de personal, visualización geográfica en mapas interactivos y notificaciones automáticas via WhatsApp y Telegram.
+GardenManager es una aplicación web full-stack para la gestión integral de una empresa de jardinería. Permite gestionar clientes, empleados, planificación de tareas, registro de trabajos realizados, checklists de verificación, incidencias, control de ausencias de personal, visualización geográfica en mapas interactivos, notificaciones automáticas via WhatsApp y Telegram, y sistema de autenticación JWT con roles.
 
 Desarrollado con arquitectura modular y separación clara de responsabilidades, preparado para escalar de SQLite a PostgreSQL sin reescribir lógica de negocio.
 
@@ -30,23 +42,42 @@ garden_manager/
 │   │   ├── core/                   # Configuración y conexión BD
 │   │   │   ├── config.py           # Settings con Pydantic v2
 │   │   │   ├── database.py         # Motor SQLAlchemy + sesiones
+│   │   │   ├── security.py         # JWT + bcrypt
+│   │   │   ├── email.py            # Cliente SMTP (Mailtrap/Gmail)
 │   │   │   ├── twilio_client.py    # Cliente WhatsApp (Twilio)
 │   │   │   └── telegram_client.py  # Cliente Telegram Bot
 │   │   │
 │   │   ├── models/                 # Modelos ORM (tablas BD)
+│   │   │   ├── client.py
+│   │   │   ├── employee.py
+│   │   │   ├── task.py
+│   │   │   ├── job.py
+│   │   │   ├── absence.py
+│   │   │   └── user.py             # Usuarios y roles
+│   │   │
 │   │   ├── schemas/                # Validación Pydantic (entrada/salida)
 │   │   ├── services/               # Lógica de negocio
 │   │   ├── routers/                # Endpoints HTTP
 │   │   └── main.py                 # Punto de entrada FastAPI
 │   │
-│   ├── tests/                      # Tests con pytest (24/24 ✅)
+│   ├── alembic/                    # Migraciones de BD
+│   │   └── versions/
+│   │
+│   ├── tests/                      # Tests con pytest (38/38 ✅)
 │   │   ├── conftest.py
 │   │   ├── test_clients.py
 │   │   ├── test_employees.py
-│   │   └── test_tasks.py
+│   │   ├── test_tasks.py
+│   │   ├── test_jobs.py
+│   │   ├── test_auth.py
+│   │   └── test_notifications.py
 │   │
 │   ├── geocode_clients.py          # Script geocodificación
 │   ├── seed.py                     # Script de datos de prueba
+│   ├── create_admin.py             # Script creación admin inicial
+│   ├── Dockerfile                  # Usuario no-root, healthcheck
+│   ├── render.yaml
+│   ├── alembic.ini
 │   └── requirements.txt
 │
 ├── frontend/                       # Interfaz con Streamlit
@@ -59,14 +90,17 @@ garden_manager/
 │   │   ├── 06_Mapa.py              # Mapa interactivo clientes
 │   │   ├── 07_Mapa_Empleados.py    # Mapa rutas + GPS empleados
 │   │   ├── 10_Notificaciones.py    # Panel WhatsApp + Telegram
-│   │   └── 15_Sugerencias.py      # GitHub Issues integrado
+│   │   └── 15_Sugerencias.py       # GitHub Issues integrado
 │   ├── utils/
 │   │   ├── api_client.py           # Cliente HTTP + caché
+│   │   ├── auth.py                 # Gestión de sesión JWT
 │   │   ├── responsive.py           # Detección dispositivo + topbar
 │   │   └── github_client.py        # API GitHub Issues
-│   └── Home.py                     # Dashboard responsive
+│   └── Home.py                     # Dashboard responsive + login
 │
-└── database/                       # Archivo SQLite (local)
+├── docker-compose.yml              # PostgreSQL + backend + frontend
+├── .env.example
+└── README.md
 ```
 
 ### Flujo de una petición
@@ -83,17 +117,43 @@ Streamlit → api_client.py → routers/ → services/ → models/ → BD
 
 | Módulo | Descripción |
 |--------|-------------|
-| **Clientes** | CRUD completo · historial · coordenadas GPS |
-| **Empleados** | Perfiles · especialidades · WhatsApp · Telegram |
-| **Tareas & Agenda** | Planificación semanal · asignación de equipos |
-| **Trabajos** | Registro de servicios ejecutados |
+| **Clientes** | CRUD completo · historial · coordenadas GPS · código postal |
+| **Empleados** | Perfiles · especialidades · WhatsApp · Telegram · GPS |
+| **Tareas & Agenda** | Planificación semanal · asignación de equipos · filtros |
+| **Trabajos** | Registro de servicios ejecutados · estados |
 | **Checklists** | Listas de verificación e incidencias por trabajo |
 | **Ausencias** | Vacaciones · bajas · control de disponibilidad |
-| **Dashboard** | Métricas responsive · móvil · tablet · desktop |
+| **Dashboard** | Métricas responsive · gráficos Plotly · selector de semana |
 | **Mapa clientes** | Geocodificación automática · buscador · filtros por zona |
 | **Mapa empleados** | Rutas · urgencia por color · GPS real · Google Maps |
 | **Notificaciones** | WhatsApp (Twilio) · Telegram Bot · plantillas automáticas |
-| **Sugerencias** | Integración directa con GitHub Issues |
+| **Autenticación** | JWT · roles (admin/encargado/empleado) · activación por email |
+| **Sugerencias** | Integración directa con GitHub Issues · notificación Telegram |
+
+---
+
+## 🔐 Sistema de autenticación
+
+### Roles y permisos
+
+| Rol | Acceso |
+|-----|--------|
+| **admin** | Todo + gestión de usuarios |
+| **encargado** | Todo excepto gestión de usuarios |
+| **empleado** | Solo sus tareas, agenda, ausencias y rutas |
+
+### Flujo de activación
+```
+Admin crea usuario
+      ↓
+Sistema genera contraseña segura automática
+      ↓
+Email de activación enviado (Mailtrap dev / Gmail prod)
+      ↓
+Usuario activa cuenta y cambia contraseña
+      ↓
+Login con JWT (válido 8 horas)
+```
 
 ---
 
@@ -104,14 +164,19 @@ Streamlit → api_client.py → routers/ → services/ → models/ → BD
 | Backend | **FastAPI** | API REST con documentación automática |
 | ORM | **SQLAlchemy** | Abstracción de base de datos |
 | Validación | **Pydantic v2** | Tipado estricto y validación |
+| Autenticación | **JWT + bcrypt** | Tokens seguros y hashing de contraseñas |
 | Base de datos | **SQLite** → **PostgreSQL** | Desarrollo / producción |
+| Migraciones | **Alembic** | Control de versiones de BD |
 | Frontend | **Streamlit** | Interfaz responsive |
+| Gráficos | **Plotly** | Dashboards interactivos |
 | HTTP client | **httpx** | Comunicación frontend → backend |
 | Mapas | **Folium + streamlit-folium** | Mapas interactivos Leaflet.js |
 | Geocodificación | **Geopy + Nominatim** | Dirección → coordenadas |
 | WhatsApp | **Twilio** | Mensajería WhatsApp Business |
 | Telegram | **python-telegram-bot** | Bot de notificaciones |
-| Tests | **pytest + httpx** | 24 tests automatizados |
+| Email | **SMTP** | Activación de cuentas (Mailtrap/Gmail) |
+| Contenedores | **Docker + Docker Compose** | Despliegue reproducible |
+| Tests | **pytest + httpx** | 38 tests automatizados |
 | Issues | **GitHub API** | Seguimiento de sugerencias |
 
 ---
@@ -122,6 +187,7 @@ Streamlit → api_client.py → routers/ → services/ → models/ → BD
 
 - Python 3.11 o superior
 - Git
+- Docker Desktop (opcional)
 
 ### 1. Clona el repositorio
 ```bash
@@ -147,8 +213,6 @@ pip install -r requirements.txt
 ```
 
 ### 4. Configura las variables de entorno
-
-Crea el archivo `.env` dentro de `backend/` copiando el ejemplo:
 ```bash
 cp .env.example .env
 ```
@@ -156,12 +220,18 @@ cp .env.example .env
 Edita `.env` con tus valores:
 ```env
 APP_NAME=GardenManager
-APP_VERSION=0.1.0
-DEBUG=True
 DATABASE_URL=sqlite:///./database/garden_manager.db
+SECRET_KEY=genera_con_secrets.token_hex(32)
 API_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:8501
 
-# GitHub (para sugerencias)
+# Email (Mailtrap dev / Gmail prod)
+MAIL_SERVER=sandbox.smtp.mailtrap.io
+MAIL_PORT=587
+MAIL_USERNAME=tu_usuario_mailtrap
+MAIL_PASSWORD=tu_password_mailtrap
+
+# GitHub
 GITHUB_TOKEN=tu_token
 GITHUB_REPO=usuario/garden-manager
 
@@ -175,27 +245,36 @@ TELEGRAM_TOKEN=xxxxxxxx:AAHxxxxxxxx
 TELEGRAM_CHAT_ID=123456789
 ```
 
-### 5. Ejecuta los tests
+### 5. Aplica las migraciones
 ```bash
-pytest tests/ -v
+alembic upgrade head
 ```
 
-Resultado esperado: **24 passed, 0 warnings**
+### 6. Crea el usuario admin
+```bash
+python create_admin.py
+```
 
-### 6. Inicia el backend
+### 7. Ejecuta los tests
+```bash
+pytest tests/ -v
+# 38 passed ✅
+```
+
+### 8. Inicia el backend
 ```bash
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Documentación interactiva en `http://localhost:8000/docs`
 
-### 7. Carga datos de prueba
+### 9. Carga datos de prueba
 ```bash
 python seed.py
-python geocode_clients.py  # Geocodifica las direcciones
+python geocode_clients.py
 ```
 
-### 8. Inicia el frontend
+### 10. Inicia el frontend
 ```bash
 cd ../frontend
 streamlit run Home.py
@@ -205,7 +284,36 @@ Interfaz disponible en `http://localhost:8501`
 
 ---
 
+## 🐳 Docker
+```bash
+# Construir y arrancar todos los servicios
+docker compose up --build
+
+# Solo arrancar (si ya está construido)
+docker compose up -d
+
+# Ver logs
+docker compose logs backend
+```
+
+Servicios disponibles:
+- **Frontend:** http://localhost:8501
+- **Backend:** http://localhost:8000
+- **PostgreSQL:** localhost:5432
+
+---
+
 ## 📡 API — Endpoints principales
+
+### Autenticación `/auth`
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/auth/login` | Login con email y contraseña |
+| POST | `/auth/users` | Crea usuario (admin) |
+| POST | `/auth/activate` | Activa cuenta con token |
+| POST | `/auth/reset-password/request` | Solicita reset de contraseña |
+| POST | `/auth/reset-password/confirm` | Confirma reset con token |
+| GET | `/auth/me` | Datos del usuario autenticado |
 
 ### Clientes `/clients`
 | Método | Endpoint | Descripción |
@@ -214,15 +322,7 @@ Interfaz disponible en `http://localhost:8501`
 | POST | `/clients/` | Crea cliente |
 | PUT | `/clients/{id}` | Actualiza cliente |
 | PATCH | `/clients/{id}/coordinates` | Actualiza coordenadas GPS |
-| DELETE | `/clients/{id}` | Desactiva cliente |
-
-### Empleados `/employees`
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/employees/` | Lista empleados activos |
-| GET | `/employees/available` | Empleados disponibles |
-| POST | `/employees/` | Crea empleado |
-| PATCH | `/employees/{id}/coordinates` | Actualiza coordenadas GPS |
+| POST | `/clients/geocode-all` | Geocodifica todos los clientes |
 
 ### Tareas `/tasks`
 | Método | Endpoint | Descripción |
@@ -239,13 +339,6 @@ Interfaz disponible en `http://localhost:8501`
 | POST | `/jobs/{id}/checklist` | Añade ítem al checklist |
 | PATCH | `/jobs/checklist/{item_id}` | Actualiza ítem / incidencia |
 
-### Ausencias `/absences`
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/absences/check-availability/{id}?date=` | Comprueba disponibilidad |
-| POST | `/absences/` | Registra ausencia |
-| PUT | `/absences/{id}` | Aprueba / deniega ausencia |
-
 ### Notificaciones `/notifications`
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -255,49 +348,30 @@ Interfaz disponible en `http://localhost:8501`
 | POST | `/notifications/recordatorio` | Recordatorio de tareas |
 | POST | `/notifications/ausencia` | Resultado solicitud ausencia |
 | POST | `/notifications/trabajo-completado` | Aviso al cliente |
-| POST | `/notifications/mensaje-libre` | Mensaje personalizado |
-
----
-
-## 🗺️ Mapas
-
-- **Geocodificación automática** via Nominatim (OpenStreetMap), sin coste
-- **Buscador y filtros** por nombre, zona y prioridad
-- **GPS real** del empleado via API del navegador
-- **Rutas Google Maps** con un clic desde el panel lateral
-- **Colores por urgencia** — rojo alta, naranja media, verde baja
-
----
-
-## 📱 Responsive
-
-La interfaz se adapta automáticamente al dispositivo:
-
-| Dispositivo | Vista |
-|-------------|-------|
-| **Móvil** | Topbar con iconos grandes · accesos directos · alertas prioritarias |
-| **Tablet** | Grid 2 columnas · métricas compactas |
-| **Desktop** | Dashboard completo 3 columnas · todas las métricas |
+| POST | `/notifications/nueva-sugerencia` | Notifica sugerencia al admin |
 
 ---
 
 ## ✅ Tests
 ```bash
 pytest tests/ -v
-# 24 passed in ~5s
+# 38 passed in ~10s
 ```
 
 | Módulo | Tests |
 |--------|-------|
 | Clientes | 9 tests — CRUD completo + borrado lógico |
 | Empleados | 7 tests — CRUD + disponibilidad |
-| Tareas | 5 tests — CRUD + agenda día/semana |
+| Tareas | 6 tests — CRUD + agenda día/semana |
 | Ausencias | 3 tests — creación + validación + disponibilidad |
+| Trabajos | 8 tests — CRUD + checklist + incidencias |
+| Autenticación | 9 tests — login + activación + JWT |
+| Notificaciones | 5 tests — endpoints + validación |
 
 ---
 
 ## 🗄️ Escalabilidad — SQLite a PostgreSQL
-```bash
+```env
 # Desarrollo
 DATABASE_URL=sqlite:///./database/garden_manager.db
 
@@ -322,9 +396,14 @@ SQLAlchemy actúa como capa de abstracción — ningún modelo, servicio ni rout
 | 7 | Frontend Streamlit | ✅ |
 | 8 | README & Documentación | ✅ |
 | 9 | Mapa empleados + rutas Google Maps | ✅ |
-| 10 | Tests pytest 24/24 | ✅ |
+| 10 | Tests pytest 38/38 | ✅ |
 | 11 | Notificaciones WhatsApp + Telegram | ✅ |
-| 12 | Despliegue en producción | 🔜 |
+| 12 | Docker + PostgreSQL | ✅ |
+| 13 | Alembic migraciones | ✅ |
+| 14 | Despliegue Render + Streamlit Cloud | ✅ |
+| 15 | Login JWT + roles | ✅ |
+| 16 | Dashboard con gráficos Plotly | ✅ |
+| 17 | App de clientes | 🔜 |
 
 ---
 
@@ -335,10 +414,13 @@ SQLAlchemy actúa como capa de abstracción — ningún modelo, servicio ni rout
 - **Borrado lógico** — los registros nunca se eliminan físicamente
 - **Manejo de errores** centralizado con `HTTPException`
 - **Docstrings** en todas las funciones y clases
-- **Tests automatizados** — 24 tests, 0 warnings
+- **Tests automatizados** — 38 tests, 0 warnings
 - **Caché en frontend** — `@st.cache_data` con TTL configurable
 - **Eager loading** con `joinedload` — elimina el problema N+1
-- **Índices en BD** en columnas de búsqueda frecuente
+- **JWT + bcrypt** — autenticación segura estándar de la industria
+- **Dockerfiles seguros** — usuario no-root, healthcheck, sin caché pip
+- **Migraciones con Alembic** — control de versiones de BD sin pérdida de datos
+- **Variables de entorno** — secretos nunca en el código
 
 ---
 
@@ -346,7 +428,8 @@ SQLAlchemy actúa como capa de abstracción — ningún modelo, servicio ni rout
 
 Desarrollado por **CarGusAriCas**
 🔗 [github.com/CarGusAriCas](https://github.com/CarGusAriCas)
+💼 [linkedin.com/in/carlos-arias-castillo](https://www.linkedin.com/in/carlos-arias-castillo/)
 
 ---
 
-*Proyecto de portfolio — Python + FastAPI + Streamlit*
+*Proyecto de portfolio — Python + FastAPI + Streamlit · 2025-2026*

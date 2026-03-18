@@ -46,7 +46,27 @@ try:
         # ── Geocodificar clientes sin coordenadas ──────────────
         sin_coords = [c for c in clientes if not c.get("latitude") and c.get("address")]
         if sin_coords:
-            st.warning(f"⚠️ {len(sin_coords)} cliente(s) sin ubicación en el mapa.")
+            col_warn, col_btn = st.columns([3, 1])
+            with col_warn:
+                st.warning(f"⚠️ {len(sin_coords)} cliente(s) sin ubicación en el mapa.")
+            with col_btn:
+                if st.button("🌍 Geocodificar automáticamente", use_container_width=True):
+                    with st.spinner(f"Geocodificando {len(sin_coords)} cliente(s)..."):
+                        try:
+                            import httpx
+                            BASE_URL = os.getenv("API_URL", "http://localhost:8000")
+                            r = httpx.post(
+                                f"{BASE_URL}/clients/geocode-all",
+                                timeout=300  # 5 minutos
+                            )
+                            data  = r.json()
+                            ok    = data.get("ok", 0)
+                            fallo = data.get("fallo", 0)
+                            st.cache_data.clear()
+                            st.success(f"✅ {ok} geocodificados · ❌ {fallo} sin resultado")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
 
             with st.expander(f"📍 Ubicar clientes pendientes ({len(sin_coords)})"):
                 cliente_sel = st.selectbox(
