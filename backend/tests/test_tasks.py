@@ -54,7 +54,6 @@ class TestTareasCRUD:
         titulos = [t["title"] for t in r.json()]
         assert "Tarea hoy" in titulos
 
-
     def test_agenda_semana(self, client, setup_tarea):
         """Debe devolver tareas de una semana."""
         cli, emp = setup_tarea
@@ -95,31 +94,8 @@ class TestTareasCRUD:
         assert r.status_code == 200
         assert r.json()["status"] == "completada"
 
-    def test_debug_agenda(self, client, setup_tarea):
-        """Debug — verifica qué devuelven los endpoints."""
-        cli, emp = setup_tarea
-        hoy = str(date.today())
 
-        # Crea la tarea
-        r_create = client.post("/tasks/", json={
-            "title":        "Debug tarea",
-            "date":         hoy,
-            "status":       "pendiente",
-            "priority":     "alta",
-            "client_id":    cli["id"],
-            "employee_ids": [emp["id"]],
-        })
-        print(f"\nCreación: {r_create.status_code} - {r_create.json()}")
-
-        # Lista todas las tareas
-        r_all = client.get("/tasks/")
-        print(f"Todas las tareas: {r_all.json()}")
-
-        # Agenda del día
-        r_day = client.get(f"/tasks/agenda/day?date={hoy}")
-        print(f"Agenda día: {r_day.json()}")
-
-class TestAusencias:
+    class TestAusencias:
     """Tests del módulo de ausencias."""
 
     def test_crear_ausencia(self, client, empleado_ejemplo):
