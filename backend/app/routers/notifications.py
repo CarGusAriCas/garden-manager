@@ -197,3 +197,33 @@ def enviar_recordatorio(data: NotificacionRecordatorio):
         tareas=data.tareas,
         fecha=data.fecha,
     )
+
+
+@router.post("/solicitar-acceso")
+def solicitar_acceso(usuario: str, rol: str, seccion: str):
+    """Notifica al admin sobre una solicitud de acceso."""
+    from app.core.telegram_client import send_telegram_alert
+    mensaje = (
+        f"🔐 <b>Solicitud de acceso</b>\n\n"
+        f"👤 Usuario: {usuario}\n"
+        f"🔑 Rol: {rol}\n"
+        f"📄 Sección: {seccion}"
+    )
+    resultado = send_telegram_alert(mensaje)
+    return {"ok": True, "resultado": resultado}
+
+
+@router.post("/nueva-sugerencia")
+def notificar_sugerencia(titulo: str, autor: str, modulo: str, prioridad: str, issue_url: str = ""):
+    """Notifica al admin sobre una nueva sugerencia via Telegram."""
+    from app.core.telegram_client import send_telegram_alert
+    mensaje = (
+        f"💡 <b>Nueva sugerencia</b>\n\n"
+        f"📝 Título: {titulo}\n"
+        f"👤 Autor: {autor}\n"
+        f"📦 Módulo: {modulo}\n"
+        f"🔺 Prioridad: {prioridad}\n"
+        f"🔗 {issue_url}"
+    )
+    send_telegram_alert(mensaje)
+    return {"ok": True}

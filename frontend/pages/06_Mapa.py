@@ -10,14 +10,19 @@ from streamlit_folium import st_folium
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import get_clients, update_client_coordinates, geocode_address
+from utils.auth import require_auth
+
+st.set_page_config(page_title="Mapa · GardenManager", page_icon="🗺️", layout="wide")
+
+require_auth(roles=["admin", "encargado"], pagina="Mapa de Clientes")
+
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button # noqa: E402
+from utils.api_client import get_clients, update_client_coordinates, geocode_address # noqa: E402
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
 
-st.set_page_config(page_title="Mapa · GardenManager", page_icon="🗺️", layout="wide")
 st.title("🗺️ Mapa de clientes")
 st.divider()
 

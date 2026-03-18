@@ -7,14 +7,18 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import get_clients, create_client, update_client, delete_client, format_date_es
+from utils.auth import require_auth
+
+st.set_page_config(page_title="Clientes · GardenManager", page_icon="👤", layout="wide")
+
+require_auth(roles=["admin", "encargado"], pagina="Gestión de Clientes")
+
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button # noqa: E402
+from utils.api_client import get_clients, create_client, update_client, delete_client, format_date_es # noqa: E402
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
-
-st.set_page_config(page_title="Clientes · GardenManager", page_icon="👤", layout="wide")
 st.title("👤 Gestión de Clientes")
 st.divider()
 

@@ -5,26 +5,27 @@ Permite crear issues en GitHub directamente desde la app.
 import streamlit as st
 import sys
 import os
-from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.github_client import (
+from utils.auth import require_auth
+
+st.set_page_config(page_title="Sugerencias · GardenManager", page_icon="💡", layout="wide")
+
+require_auth()
+
+from dotenv import load_dotenv # noqa: E402
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../backend/.env"))
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button  # noqa: E402
+from utils.github_client import (                       # noqa: E402
     crear_issue, listar_issues,
     ETIQUETAS_DISPONIBLES, PRIORIDADES, MODULOS
 )
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "../../backend/.env"))
 apply_responsive_css()
 mobile_topbar()
 back_button()
 
-st.set_page_config(
-    page_title="Sugerencias · GardenManager",
-    page_icon="💡",
-    layout="wide"
-)
 st.title("💡 Sugerencias y mejoras")
 st.caption("Envía tus ideas directamente al equipo de desarrollo")
 st.divider()
@@ -97,6 +98,23 @@ with tab_nueva:
                             modulo=modulo,
                             autor=autor or "Usuario anónimo",
                         )
+
+                        # Notifica al admin por Telegram
+                        try:
+                            from utils.api_client import _post
+                            import urllib.parse
+                            _post(
+                                f"/notifications/nueva-sugerencia"
+                                f"?titulo={urllib.parse.quote(titulo[:50])}"
+                                f"&autor={urllib.parse.quote(autor or 'Anónimo')}"
+                                f"&modulo={urllib.parse.quote(modulo)}"
+                                f"&prioridad={urllib.parse.quote(prioridad)}"
+                                f"&issue_url={urllib.parse.quote(resultado['url'])}",
+                                {}
+                            )
+                        except Exception:
+                            pass  # No bloquea si falla Telegram
+
                         st.success(
                             f"✅ Sugerencia enviada correctamente · "
                             f"Issue #{resultado['numero']}"

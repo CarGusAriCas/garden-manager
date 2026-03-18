@@ -8,27 +8,42 @@ from datetime import date, timedelta
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import (
+from utils.auth import require_auth, get_employee_id, is_admin_or_encargado
+
+st.set_page_config(page_title="Tareas · GardenManager", page_icon="📅", layout="wide")
+
+require_auth()
+
+# ── Filtro por rol ─────────────────────────────────────────────
+es_admin = is_admin_or_encargado()
+mi_employee_id = get_employee_id()
+
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button # noqa: E402
+from utils.api_client import ( # noqa: E402
     get_tasks, get_clients, get_employees,
     create_task, update_task,
     get_tasks_by_week, format_date_es
-)
+) 
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
 
-st.set_page_config(page_title="Tareas · GardenManager", page_icon="📅", layout="wide")
 st.title("📅 Tareas y Agenda")
 st.divider()
 
 ESTADOS    = ["pendiente", "en_progreso", "completada", "cancelada"]
 PRIORIDADES = ["baja", "media", "alta"]
 
-tab_agenda, tab_lista, tab_nueva = st.tabs([
-    "🗓️ Agenda semanal", "📋 Todas las tareas", "➕ Nueva tarea"
-])
+if es_admin:
+    tab_agenda, tab_lista, tab_nueva = st.tabs([
+        "🗓️ Agenda semanal", "📋 Todas las tareas", "➕ Nueva tarea"
+    ])
+else:
+    tab_agenda, tab_lista = st.tabs([
+        "🗓️ Agenda semanal", "📋 Mis tareas"
+    ])
+    tab_nueva = None
 
 # ── Tab: Agenda semanal ────────────────────────────────────────
 with tab_agenda:
@@ -61,6 +76,13 @@ with tab_agenda:
 
     try:
         tareas_semana = get_tasks_by_week(inicio, fin)
+
+        # Empleados solo ven sus tareas
+        if not es_admin and mi_employee_id:
+            tareas_semana = [
+                t for t in tareas_semana
+                if any(e["id"] == mi_employee_id for e in t.get("employees", []))
+            ]
         dias          = [inicio + timedelta(days=i) for i in range(7)]
         nombres_dias  = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
@@ -88,6 +110,13 @@ with tab_agenda:
 with tab_lista:
     try:
         tareas = get_tasks()
+
+        # Empleados solo ven sus tareas asignadas
+        if not es_admin and mi_employee_id:
+            tareas = [
+                t for t in tareas
+                if any(e["id"] == mi_employee_id for e in t.get("employees", []))
+            ]
         if not tareas:
             st.info("No hay tareas registradas.")
         else:
@@ -131,23 +160,33 @@ with tab_lista:
                             nuevas_notas = st.text_area("Notas", value=t.get('notes') or "")
 
                             col_s, col_d = st.columns(2)
-                            with col_s:
-                                if st.form_submit_button("💾 Guardar", use_container_width=True):
+                            if es_admin:
+                                col_s, col_d = st.columns(2)
+                                with col_s:
+                                    if st.form_submit_button("💾 Guardar", use_container_width=True):
+                                        try:
+                                            update_task(t['id'], {
+                                                "status":   nuevo_estado,
+                                                "priority": nueva_prioridad,
+                                                "notes":    nuevas_notas or None,
+                                            })
+                                            st.success("Tarea actualizada.")
+                                            st.rerun()
+                                        except Exception as ex:
+                                            st.error(f"Error: {ex}")
+                                with col_d:
+                                    if st.form_submit_button("🗑️ Cancelar", use_container_width=True):
+                                        try:
+                                            update_task(t['id'], {"status": "cancelada"})
+                                            st.warning("Tarea cancelada.")
+                                            st.rerun()
+                                        except Exception as ex:
+                                            st.error(f"Error: {ex}")
+                            else:
+                                if st.form_submit_button("💾 Guardar estado", use_container_width=True):
                                     try:
-                                        update_task(t['id'], {
-                                            "status":   nuevo_estado,
-                                            "priority": nueva_prioridad,
-                                            "notes":    nuevas_notas or None,
-                                        })
-                                        st.success("Tarea actualizada.")
-                                        st.rerun()
-                                    except Exception as ex:
-                                        st.error(f"Error: {ex}")
-                            with col_d:
-                                if st.form_submit_button("🗑️ Cancelar", use_container_width=True):
-                                    try:
-                                        update_task(t['id'], {"status": "cancelada"})
-                                        st.warning("Tarea cancelada.")
+                                        update_task(t['id'], {"status": nuevo_estado})
+                                        st.success("Estado actualizado.")
                                         st.rerun()
                                     except Exception as ex:
                                         st.error(f"Error: {ex}")
@@ -156,59 +195,60 @@ with tab_lista:
         st.error(f"❌ Error al cargar tareas: {e}")
 
 # ── Tab: Nueva tarea ───────────────────────────────────────────
-with tab_nueva:
-    st.subheader("Crear nueva tarea")
-    try:
-        clientes  = get_clients()
-        empleados = get_employees()
+if tab_nueva:
+    with tab_nueva:
+        st.subheader("Crear nueva tarea")
+        try:
+            clientes  = get_clients()
+            empleados = get_employees()
 
-        clientes_opciones  = {c['name']: c['id'] for c in clientes}
-        empleados_opciones = {e['name']: e['id'] for e in empleados}
+            clientes_opciones  = {c['name']: c['id'] for c in clientes}
+            empleados_opciones = {e['name']: e['id'] for e in empleados}
 
-        with st.form("form_nueva_tarea"):
-            title       = st.text_input("Título *", placeholder="Mantenimiento jardín mensual")
-            description = st.text_area("Descripción", placeholder="Detalle del trabajo a realizar...")
-            col1, col2  = st.columns(2)
-            with col1:
-                fecha      = st.date_input("Fecha *", value=date.today())
-                hora_inicio = st.time_input("Hora de inicio")
-                prioridad  = st.selectbox("Prioridad", PRIORIDADES, index=1)
-            with col2:
-                hora_fin   = st.time_input("Hora de fin")
-                cliente    = st.selectbox("Cliente *", list(clientes_opciones.keys()))
-                estado     = st.selectbox("Estado", ESTADOS)
+            with st.form("form_nueva_tarea"):
+                title       = st.text_input("Título *", placeholder="Mantenimiento jardín mensual")
+                description = st.text_area("Descripción", placeholder="Detalle del trabajo a realizar...")
+                col1, col2  = st.columns(2)
+                with col1:
+                    fecha      = st.date_input("Fecha *", value=date.today())
+                    hora_inicio = st.time_input("Hora de inicio")
+                    prioridad  = st.selectbox("Prioridad", PRIORIDADES, index=1)
+                with col2:
+                    hora_fin   = st.time_input("Hora de fin")
+                    cliente    = st.selectbox("Cliente *", list(clientes_opciones.keys()))
+                    estado     = st.selectbox("Estado", ESTADOS)
 
-            empleados_sel = st.multiselect(
-                "Empleados asignados",
-                list(empleados_opciones.keys())
-            )
-            notas = st.text_area("Notas", placeholder="Observaciones adicionales...")
+                empleados_sel = st.multiselect(
+                    "Empleados asignados",
+                    list(empleados_opciones.keys())
+                )
+                notas = st.text_area("Notas", placeholder="Observaciones adicionales...")
 
-            submitted = st.form_submit_button("➕ Crear tarea", use_container_width=True)
+                submitted = st.form_submit_button("➕ Crear tarea", use_container_width=True)
 
-            if submitted:
-                if not title:
-                    st.error("El título es obligatorio.")
-                elif not cliente:
-                    st.error("Debes seleccionar un cliente.")
-                else:
-                    try:
-                        create_task({
-                            "title":        title,
-                            "description":  description or None,
-                            "date":         str(fecha),
-                            "start_time":   str(hora_inicio),
-                            "end_time":     str(hora_fin),
-                            "status":       estado,
-                            "priority":     prioridad,
-                            "client_id":    clientes_opciones[cliente],
-                            "employee_ids": [empleados_opciones[e] for e in empleados_sel],
-                            "notes":        notas or None,
-                        })
-                        st.success(f"✅ Tarea '{title}' creada correctamente.")
-                        st.rerun()
-                    except Exception as ex:
-                        st.error(f"❌ Error: {ex}")
+                if submitted:
+                    if not title:
+                        st.error("El título es obligatorio.")
+                    elif not cliente:
+                        st.error("Debes seleccionar un cliente.")
+                    else:
+                        try:
+                            create_task({
+                                "title":        title,
+                                "description":  description or None,
+                                "date":         str(fecha),
+                                "start_time":   str(hora_inicio),
+                                "end_time":     str(hora_fin),
+                                "status":       estado,
+                                "priority":     prioridad,
+                                "client_id":    clientes_opciones[cliente],
+                                "employee_ids": [empleados_opciones[e] for e in empleados_sel],
+                                "notes":        notas or None,
+                            })
+                            st.success(f"✅ Tarea '{title}' creada correctamente.")
+                            st.rerun()
+                        except Exception as ex:
+                            st.error(f"❌ Error: {ex}")
 
-    except Exception as e:
-        st.error(f"❌ Error al cargar datos: {e}")
+        except Exception as e:
+            st.error(f"❌ Error al cargar datos: {e}")

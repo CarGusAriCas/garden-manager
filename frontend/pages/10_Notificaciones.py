@@ -8,18 +8,19 @@ import urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import get_employees, get_clients, get_tasks, get_absences, _post, format_date_es
+from utils.auth import require_auth
+
+st.set_page_config(page_title="Notificaciones · GardenManager", page_icon="📱", layout="wide")
+
+require_auth(roles=["admin", "encargado"], pagina="Notificaciones")
+
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button # noqa: E402
+from utils.api_client import get_employees, get_clients, get_tasks, get_absences, _post, format_date_es # noqa: E402
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
 
-st.set_page_config(
-    page_title="Notificaciones · GardenManager",
-    page_icon="📱",
-    layout="wide"
-)
 st.title("📱 Notificaciones")
 st.caption("Envío de mensajes via WhatsApp y Telegram")
 st.divider()

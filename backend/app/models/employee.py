@@ -49,3 +49,6 @@ class Employee(Base):
 
     # Relación: un empleado puede tener muchas ausencias
     absences = relationship("Absence", back_populates="employee")
+
+    # Relación con usuario de login
+    user = relationship("User", back_populates="employee", uselist=False)

@@ -7,10 +7,17 @@ import os
 from datetime import datetime
 
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
-GITHUB_REPO  = os.getenv("GITHUB_REPO", "CarGusAriCas/garden-manager")
-GITHUB_API   = "https://api.github.com"
+def _get_token() -> str:
+    """Lee el token de GitHub en tiempo de ejecución."""
+    return os.getenv("GITHUB_TOKEN", "")
 
+
+def _get_repo() -> str:
+    """Lee el repositorio de GitHub en tiempo de ejecución."""
+    return os.getenv("GITHUB_REPO", "CarGusAriCas/garden-manager")
+
+
+GITHUB_API = "https://api.github.com"
 
 ETIQUETAS_DISPONIBLES = {
     "💡 Nueva funcionalidad": "enhancement",
@@ -26,9 +33,9 @@ ETIQUETAS_DISPONIBLES = {
 }
 
 PRIORIDADES = {
-    "🔴 Alta":   "priority: high",
-    "🟡 Media":  "priority: medium",
-    "🟢 Baja":   "priority: low",
+    "🔴 Alta":  "priority: high",
+    "🟡 Media": "priority: medium",
+    "🟢 Baja":  "priority: low",
 }
 
 MODULOS = [
@@ -71,10 +78,10 @@ def crear_issue(
     Raises:
         Exception: Si la API de GitHub devuelve un error
     """
-    if not GITHUB_TOKEN:
+    token = _get_token()
+    if not token:
         raise Exception("Token de GitHub no configurado en .env")
 
-    # ── Construye el cuerpo del issue en Markdown ──────────────
     body = f"""
 ## 📋 Descripción
 {descripcion}
@@ -82,7 +89,6 @@ def crear_issue(
 ---
 
 ## 🔍 Detalles
-
 | Campo | Valor |
 |-------|-------|
 | **Módulo** | {modulo} |
@@ -92,11 +98,9 @@ def crear_issue(
 | **Fecha** | {datetime.now().strftime("%d/%m/%Y %H:%M")} |
 
 ---
-
 *Issue creado automáticamente desde GardenManager App*
     """.strip()
 
-    # ── Etiquetas del issue ────────────────────────────────────
     labels = [
         ETIQUETAS_DISPONIBLES.get(etiqueta, "enhancement"),
         PRIORIDADES.get(prioridad, "priority: medium"),
@@ -110,13 +114,13 @@ def crear_issue(
     }
 
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-        "Accept":        "application/vnd.github+json",
+        "Authorization":        f"Bearer {token}",
+        "Accept":               "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
 
     response = httpx.post(
-        f"{GITHUB_API}/repos/{GITHUB_REPO}/issues",
+        f"{GITHUB_API}/repos/{_get_repo()}/issues",
         json=payload,
         headers=headers,
         timeout=10
@@ -143,16 +147,17 @@ def listar_issues(estado: str = "open") -> list:
     Returns:
         Lista de issues
     """
-    if not GITHUB_TOKEN:
+    token = _get_token()
+    if not token:
         return []
 
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Authorization": f"Bearer {token}",
         "Accept":        "application/vnd.github+json",
     }
 
     response = httpx.get(
-        f"{GITHUB_API}/repos/{GITHUB_REPO}/issues",
+        f"{GITHUB_API}/repos/{_get_repo()}/issues",
         params={"state": estado, "per_page": 20},
         headers=headers,
         timeout=10

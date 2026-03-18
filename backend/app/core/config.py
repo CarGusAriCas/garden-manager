@@ -33,5 +33,21 @@ class Settings(BaseSettings):
     telegram_token:   str = ""
     telegram_chat_id: str = ""
 
+    # Email
+    mail_server:    str = "sandbox.smtp.mailtrap.io"
+    mail_port:      int = 587
+    mail_username:  str = ""
+    mail_password:  str = ""
+    mail_from:      str = "noreply@gardenmanager.com"
+    mail_from_name: str = "GardenManager"
+
+    # Frontend URL (para links en emails)
+    frontend_url: str = "http://localhost:8501"
+
+    # Seguridad JWT
+    secret_key:  str = "cambia_esto_en_produccion_por_clave_segura"
+    algorithm:   str = "HS256"
+
+
 # Instancia única que usaremos en toda la aplicación
 settings = Settings()

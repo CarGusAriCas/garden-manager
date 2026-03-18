@@ -5,12 +5,8 @@ Las migraciones de BD las gestiona Alembic — no usar create_all aquí.
 """
 from fastapi import FastAPI
 from app.core.config import settings
-from app.routers import clients
-from app.routers import employees
-from app.routers import tasks
-from app.routers import jobs
-from app.routers import absences
-from app.routers import notifications
+from app.routers import clients, employees, tasks, jobs, absences, notifications, auth
+
 
 app = FastAPI(
     title=settings.app_name,
@@ -24,6 +20,7 @@ app.include_router(tasks.router)
 app.include_router(jobs.router)
 app.include_router(absences.router)
 app.include_router(notifications.router)
+app.include_router(auth.router)
 
 
 @app.get("/")
@@ -41,3 +38,9 @@ def root():
 def health_check():
     """Endpoint de verificación del estado del servidor."""
     return {"status": "ok"}
+
+
+@app.get("/ping")
+def ping():
+    """Endpoint de keep-alive para evitar el spin-down de Render."""
+    return {"pong": True}

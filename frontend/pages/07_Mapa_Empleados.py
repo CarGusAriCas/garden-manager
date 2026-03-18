@@ -12,23 +12,27 @@ import urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import (
+from utils.auth import require_auth, is_admin_or_encargado, get_employee_id
+
+st.set_page_config(page_title="Mapa Empleados · GardenManager", page_icon="🧭", layout="wide")
+
+require_auth()
+
+es_admin       = is_admin_or_encargado()
+mi_employee_id = get_employee_id()
+
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button # noqa: E402
+from utils.api_client import ( # noqa: E402
     get_employees, get_tasks_by_day, get_tasks_by_week,
     update_employee_coordinates, format_date_es
 )
-import folium
-from streamlit_folium import st_folium
+import folium # noqa: E402
+from streamlit_folium import st_folium # noqa: E402
 
 apply_responsive_css()
 mobile_topbar()
 back_button()
 
-st.set_page_config(
-    page_title="Mapa Empleados · GardenManager",
-    page_icon="🧭",
-    layout="wide"
-)
 st.title("🧭 Mapa de empleados y rutas")
 st.divider()
 
@@ -56,6 +60,10 @@ def google_maps_address_url(address: str) -> str:
 
 try:
     empleados = get_employees()
+
+    # Empleados solo ven su propio marcador y rutas
+    if not es_admin and mi_employee_id:
+        empleados = [e for e in empleados if e["id"] == mi_employee_id]
     if not empleados:
         st.info("No hay empleados registrados.")
         st.stop()

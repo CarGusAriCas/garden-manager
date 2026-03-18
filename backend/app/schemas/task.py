@@ -47,13 +47,13 @@ class TaskUpdate(BaseModel):
 
 
 class TaskResponse(TaskBase):
-    """Schema de respuesta simple — devuelve IDs en lugar de objetos completos."""
-    id:           int
-    is_active:    bool
-    created_at:   datetime
-    updated_at:   datetime
-    employee_ids: list[int] = []
-
+    """Schema de respuesta completa con objetos relacionados."""
+    id:         int
+    is_active:  bool
+    created_at: datetime
+    updated_at: datetime
+    client:     Optional[ClientResponse]   = None
+    employees:  list[EmployeeResponse]     = []
     model_config = {"from_attributes": True}
 
 

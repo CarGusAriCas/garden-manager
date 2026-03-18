@@ -8,8 +8,14 @@ from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from utils.responsive import apply_responsive_css, mobile_topbar, back_button
-from utils.api_client import (
+from utils.auth import require_auth
+
+st.set_page_config(page_title="Trabajos · GardenManager", page_icon="📋", layout="wide")
+
+require_auth(roles=["admin", "encargado"], pagina="Trabajos y Checklists")
+
+from utils.responsive import apply_responsive_css, mobile_topbar, back_button # noqa: E402
+from utils.api_client import ( # noqa: E402
     get_jobs, get_tasks, create_job,
     update_job, update_checklist_item, format_date_es
 )
@@ -18,7 +24,6 @@ apply_responsive_css()
 mobile_topbar()
 back_button()
 
-st.set_page_config(page_title="Trabajos · GardenManager", page_icon="📋", layout="wide")
 st.title("📋 Trabajos realizados")
 st.divider()
 

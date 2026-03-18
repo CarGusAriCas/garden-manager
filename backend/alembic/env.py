@@ -15,7 +15,7 @@ from app.core.config import settings
 from app.core.database import Base
 
 # Importa todos los modelos explícitamente
-from app.models import client, employee, task, job, absence  # noqa: F401
+from app.models import client, employee, task, job, absence, user  # noqa: F401
 
 # Configuración de Alembic
 config = context.config

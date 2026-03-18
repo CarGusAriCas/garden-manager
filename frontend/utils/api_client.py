@@ -88,7 +88,7 @@ def geocode_address(address: str):
 
 # ── Clientes ───────────────────────────────────────────────────
 
-@st.cache_data(ttl=5)   # ← reduce a 5 segundos temporalmente
+@st.cache_data(ttl=300)
 def get_clients() -> list:
     return _get("/clients/")
 
@@ -117,7 +117,7 @@ def update_client_coordinates(client_id: int, lat: float, lon: float) -> dict:
 
 # ── Empleados ──────────────────────────────────────────────────
 
-@st.cache_data(ttl=30)
+@st.cache_data(ttl=300)
 def get_employees() -> list:
     """Lista de empleados — cacheada 30 segundos."""
     return _get("/employees/")
@@ -147,7 +147,7 @@ def update_employee_coordinates(employee_id: int, lat: float, lon: float) -> dic
 
 # ── Tareas ─────────────────────────────────────────────────────
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=60)
 def get_tasks() -> list:
     """Lista de tareas — cacheada 15 segundos."""
     return _get("/tasks/")
@@ -179,7 +179,7 @@ def delete_task(task_id: int) -> dict:
 
 # ── Trabajos ───────────────────────────────────────────────────
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=60)
 def get_jobs() -> list:
     """Lista de trabajos — cacheada 15 segundos."""
     return _get("/jobs/")
@@ -203,7 +203,7 @@ def update_checklist_item(item_id: int, data: dict) -> dict:
 
 # ── Ausencias ──────────────────────────────────────────────────
 
-@st.cache_data(ttl=30)
+@st.cache_data(ttl=120)
 def get_absences() -> list:
     """Lista de ausencias — cacheada 30 segundos."""
     return _get("/absences/")
@@ -222,3 +222,88 @@ def update_absence(absence_id: int, data: dict) -> dict:
 
 def check_availability(employee_id: int, target_date: date) -> dict:
     return _get(f"/absences/check-availability/{employee_id}?date={parse_date_api(target_date)}")
+
+
+# ── Autenticación ──────────────────────────────────────────────
+
+def login(email: str, password: str) -> dict:
+    """Autentica un usuario y devuelve el token JWT."""
+    try:
+        r = httpx.post(
+            f"{BASE_URL}/auth/login",
+            data={"username": email, "password": password},
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=30
+        )
+        if r.status_code == 200:
+            return {"ok": True, **r.json()}
+        return {"ok": False, "error": r.json().get("detail", "Error de autenticación")}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def activate_account(token: str, new_password: str, confirm_password: str) -> dict:
+    """Activa una cuenta con el token del email."""
+    try:
+        r = httpx.post(
+            f"{BASE_URL}/auth/activate",
+            json={"token": token, "new_password": new_password, "confirm_password": confirm_password},
+            timeout=30
+        )
+        if r.status_code == 200:
+            return {"ok": True, **r.json()}
+        return {"ok": False, "error": r.json().get("detail", "Error")}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def request_password_reset(email: str) -> dict:
+    """Solicita reset de contraseña."""
+    try:
+        r = httpx.post(
+            f"{BASE_URL}/auth/reset-password/request",
+            json={"email": email},
+            timeout=30
+        )
+        return {"ok": True, "message": r.json().get("message", "")}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def confirm_password_reset(token: str, new_password: str, confirm_password: str) -> dict:
+    """Confirma el reset de contraseña con el token del email."""
+    try:
+        r = httpx.post(
+            f"{BASE_URL}/auth/reset-password/confirm",
+            json={"token": token, "new_password": new_password, "confirm_password": confirm_password},
+            timeout=30
+        )
+        if r.status_code == 200:
+            return {"ok": True, **r.json()}
+        return {"ok": False, "error": r.json().get("detail", "Error")}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    
+
+def solicitar_acceso(pagina: str, usuario: str, rol_actual: str) -> dict:
+    """Envía solicitud de acceso al admin via Telegram."""
+    try:
+        import urllib.parse
+        return _post(
+            f"/notifications/solicitar-acceso"
+            f"?usuario={urllib.parse.quote(usuario)}"
+            f"&rol={urllib.parse.quote(rol_actual)}"
+            f"&seccion={urllib.parse.quote(pagina)}",
+            {}
+        )
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    
+
+def ping_backend() -> bool:
+    """Despierta el backend si está dormido."""
+    try:
+        httpx.get(f"{BASE_URL}/ping", timeout=60)
+        return True
+    except Exception:
+        return False
