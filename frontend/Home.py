@@ -13,7 +13,7 @@ from utils.api_client import (
     format_date_es, login, activate_account,
     request_password_reset, confirm_password_reset, ping_backend
 )
-from utils.responsive import apply_responsive_css, mobile_topbar, device_selector, init_device
+from utils.responsive import apply_responsive_css, mobile_topbar, init_device
 from utils.auth import init_auth, is_authenticated, get_role, get_nombre, logout
 
 st.set_page_config(page_title="Jardineando.es", page_icon="🌿", layout="wide")
@@ -124,7 +124,6 @@ elif not is_authenticated():
 # ══════════════════════════════════════════════════════════
 apply_responsive_css()
 init_device()
-device_selector()
 mobile_topbar()
 
 st.components.v1.html("""
