@@ -58,3 +58,50 @@ def set_client_coordinates(
 ):
     """Actualiza las coordenadas geográficas de un cliente."""
     return client_service.update_client_coordinates(db, client_id, lat, lon)
+
+
+@router.post("/geocode-all")
+def geocode_all_clients(db: Session = Depends(get_db)):
+    """
+    Geocodifica todos los clientes sin coordenadas.
+    Ejecutar una sola vez tras el seed inicial.
+    """
+    import time
+    from geopy.geocoders import Nominatim
+
+    geolocator = Nominatim(user_agent="garden_manager_prod_v1", timeout=15)
+    clientes    = db.query(Client).filter(
+        Client.is_active.is_(True),
+        Client.latitude.is_(None)
+    ).all()
+
+    resultados = {"ok": 0, "fallo": 0, "total": len(clientes)}
+
+    for c in clientes:
+        try:
+            query    = f"{c.address}, {c.postal_code}, España" if c.postal_code else f"{c.address}, España"
+            location = geolocator.geocode(query)
+            time.sleep(1.5)
+
+            if not location:
+                partes   = c.address.split(",")
+                zona     = ", ".join(partes[-2:]).strip()
+                location = geolocator.geocode(f"{zona}, España")
+                time.sleep(1.5)
+
+            if location:
+                c.latitude  = location.latitude
+                c.longitude = location.longitude
+                db.commit()
+                resultados["ok"] += 1
+            else:
+                c.latitude  = 36.7213 + (resultados["fallo"] * 0.001)
+                c.longitude = -4.4214 + (resultados["fallo"] * 0.001)
+                db.commit()
+                resultados["fallo"] += 1
+
+        except Exception:
+            resultados["fallo"] += 1
+            time.sleep(2)
+
+    return resultados
