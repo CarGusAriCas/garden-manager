@@ -24,7 +24,7 @@ RUN apt-get update \
 COPY requirements.txt .
 
 # Instala dependencias Python sin caché para reducir tamaño
-RUN pip install --no-cache-dir --upgrade pip \
+RUN pip install --no-cache-dir --upgrade pip wheel==0.46.2 \
     && pip install --no-cache-dir -r requirements.txt
 
 # Copia el resto del código
