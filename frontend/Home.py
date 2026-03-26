@@ -18,6 +18,15 @@ from utils.auth import init_auth, is_authenticated, get_role, get_nombre, logout
 
 st.set_page_config(page_title="Jardineando.es", page_icon="🌿", layout="wide")
 
+# Oculta sidebar en pantallas de login/activación/reset
+if not is_authenticated() or activate_token or reset_token:
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] {display: none;}
+            [data-testid="collapsedControl"] {display: none;}
+        </style>
+    """, unsafe_allow_html=True)
+
 init_auth()
 
 # ── Lee query params para activación y reset ──────────────
